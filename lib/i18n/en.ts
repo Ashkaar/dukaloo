@@ -1,0 +1,206 @@
+// English, the source dictionary. Every text the app shows lives here, and
+// in ku.ts, ar.ts and tr.ts with exactly the same keys: they are typed as
+// `Messages`, so a missing translation fails the type check and the build.
+//
+// Functions are for text with values in it. Numbers arrive as plain
+// numbers; amounts and dates arrive already formatted.
+
+const en = {
+  common: {
+    loading: "Loading…",
+    saving: "Saving…",
+    save: "Save",
+    saveChanges: "Save changes",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    add: "Add",
+    close: "Close",
+    back: "Back",
+    yes: "Yes",
+    no: "No",
+    name: "Name",
+    password: "Password",
+    optional: "optional",
+    saved: "Saved.",
+    somethingWrong: "Something went wrong. Please try again.",
+    comingSoon: "Coming soon",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+  },
+
+  // Month names for dates (built by lib/format.ts, so server and browser agree).
+  months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+
+  app: {
+    name: "Dukaloo",
+    tagline: "Point of sale for retail shops",
+  },
+
+  nav: {
+    main: "Main navigation",
+    dashboard: "Dashboard",
+    staff: "Staff",
+    settings: "Settings",
+    more: "More",
+    signOut: "Sign out",
+    skipToContent: "Skip to content",
+  },
+
+  header: {
+    openMenu: "Open menu",
+    userMenu: "Account menu",
+    theme: "Theme",
+    light: "Light",
+    dark: "Dark",
+    system: "System",
+    language: "Language",
+    owner: "Owner",
+    online: "Online",
+    offline: "Offline",
+  },
+
+  updates: {
+    title: "What's new",
+    none: "Nothing new right now.",
+    markRead: "Mark all as read",
+    // One entry per update in lib/updates.ts: { title, text }.
+    items: {},
+  },
+
+  auth: {
+    signInTitle: "Sign in",
+    signInTo: (shop: string) => `Sign in to ${shop}`,
+    who: "Who's signing in?",
+    owner: "Owner",
+    password: "Password",
+    signIn: "Sign in",
+    signingIn: "Signing in…",
+    invalid: "That password isn't right.",
+    noOwnerYet: "The owner password hasn't been set yet. Open Dukaloo from your Ariloo account to set it.",
+    signedOut: "You've been signed out.",
+  },
+
+  ownerPassword: {
+    title: "Owner password",
+    chooseTitle: "Choose your owner password",
+    chooseIntro:
+      "You'll use it to sign in to this shop on any device, and to unlock owner screens on a till where staff are signed in. Keep it to yourself.",
+    changeIntro: "Changing it signs the owner out on every other device.",
+    current: "Current password",
+    new: "New password",
+    confirm: "Repeat the new password",
+    mismatch: "The two passwords don't match.",
+    tooShort: (n: number) => `Use at least ${n} characters.`,
+    done: "Owner password saved.",
+    continue: "Continue to the dashboard",
+  },
+
+  unlock: {
+    title: "Owner password needed",
+    text: "Enter the owner password to open owner screens on this device for two hours.",
+    button: "Unlock",
+    lock: "Lock owner screens",
+    locked: "Owner screens locked.",
+    unlocked: "Owner screens unlocked for two hours.",
+  },
+
+  dashboard: {
+    title: "Dashboard",
+    hello: (name: string) => `Hello, ${name}`,
+    helloOwner: "Hello",
+    intro: "Here's your shop at a glance.",
+    subscription: "Subscription",
+    trialEnds: (date: string) => `Free trial until ${date}`,
+    paidUntil: (date: string) => `Paid until ${date}`,
+    graceUntil: (date: string) => `Payment overdue. The shop closes on ${date}.`,
+    manage: "Manage on Ariloo",
+    shortcuts: "Shortcuts",
+    gettingStarted: "Getting started",
+    stepStaff: "Add a staff login for each person who uses the till.",
+    stepSettings: "Choose your language and theme.",
+    stepSoon: "Products, the till and stock arrive in the next updates.",
+  },
+
+  staff: {
+    title: "Staff",
+    intro: "Each person gets their own login. Choose which sections they can open.",
+    add: "Add staff",
+    editTitle: (name: string) => `Edit ${name}`,
+    newTitle: "New staff login",
+    name: "Name",
+    password: "Password",
+    newPassword: "New password",
+    keepPassword: "Leave empty to keep the current password.",
+    sections: "Can open",
+    active: "Can sign in",
+    inactive: "Turned off",
+    none: "No staff logins yet.",
+    deleteTitle: (name: string) => `Delete ${name}?`,
+    deleteText: "They won't be able to sign in any more. Sales they made stay in the records.",
+    nameTaken: "Someone already has that name.",
+    ownerOnly: "Staff logins are managed by the owner.",
+    since: (date: string) => `Since ${date}`,
+  },
+
+  settings: {
+    title: "Settings",
+    appearance: "Appearance",
+    theme: "Theme",
+    language: "Language",
+    languageNote: "Saved on this device. The shop's default language is set on Ariloo.",
+    shop: "Shop",
+    shopNote: "These come from your Ariloo account.",
+    shopName: "Name",
+    branch: "Branch",
+    currency: "Currency",
+    plan: "Plan",
+    status: "Status",
+    manage: "Manage on Ariloo",
+    security: "Security",
+    ownerPassword: "Owner password",
+    changeOwnerPassword: "Change owner password",
+    lockDevice: "Lock owner screens on this device",
+  },
+
+  plans: {
+    starter: "Starter",
+    pro: "Pro",
+    advanced: "Advanced",
+    none: "No plan",
+  },
+
+  states: {
+    waiting: "Not open yet",
+    trial: "Free trial",
+    active: "Active",
+    grace: "Payment overdue",
+    expired: "Expired",
+    suspended: "Suspended",
+  },
+
+  notice: {
+    notFoundTitle: "Shop not found",
+    notFoundText: "There's no Dukaloo shop at this address. Check the link, or open your shop from your Ariloo account.",
+    waitingTitle: "Not open yet",
+    waitingText: "This shop isn't open yet. Finish setting it up in your Ariloo account.",
+    closedTitle: "This shop is closed",
+    closedText: "Its subscription has ended or been paused. The owner can reopen it from their Ariloo account.",
+    noDatabaseText: "This shop's data is still being prepared. Please try again in a minute.",
+    account: "Go to your Ariloo account",
+  },
+
+  errors: {
+    notLoggedIn: "Please sign in again.",
+    noAccess: "You don't have access to this.",
+    ownerOnly: "Only the owner can do this.",
+    invalid: "Please check what you entered.",
+    notFound: "Not found.",
+    server: "Something went wrong on our side. Please try again.",
+    wrongPassword: "That password isn't right.",
+    tooMany: "Too many attempts. Wait a minute and try again.",
+  },
+};
+
+export type Messages = typeof en;
+export default en;
