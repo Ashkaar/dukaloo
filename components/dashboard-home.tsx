@@ -60,7 +60,7 @@ export function DashboardHome({ viewer, subscription }: { viewer: Viewer; subscr
               </CardHeader>
               <CardContent>
                 <ol className="space-y-3 text-sm">
-                  {[t.dashboard.stepStaff, t.dashboard.stepSettings].map((step) => (
+                  {[t.dashboard.stepProducts, t.dashboard.stepStaff, t.dashboard.stepSettings].map((step) => (
                     <li key={step} className="flex items-start gap-3">
                       <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-primary" />
                       {step}

@@ -43,6 +43,51 @@ export const SCHEMA: string[] = [
     detail TEXT NOT NULL DEFAULT ''
   )`,
   "CREATE INDEX IF NOT EXISTS activity_log_at ON activity_log (at)",
+
+  // ---- Catalogue (products, variants, categories) ----
+  `CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS categories_name ON categories (name COLLATE NOCASE)",
+  // A product is never deleted once made, only archived, so sales and stock
+  // records can always name what was sold.
+  `CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    category_id INTEGER,
+    brand TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    unit TEXT NOT NULL DEFAULT 'piece',
+    options TEXT NOT NULL DEFAULT '[]',
+    active INTEGER NOT NULL DEFAULT 1,
+    archived_at INTEGER,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS products_category ON products (category_id)",
+  "CREATE INDEX IF NOT EXISTS products_name ON products (name COLLATE NOCASE)",
+  `CREATE TABLE IF NOT EXISTS product_variants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    options TEXT NOT NULL DEFAULT '[]',
+    sku TEXT NOT NULL DEFAULT '',
+    barcode TEXT NOT NULL DEFAULT '',
+    price_cents INTEGER NOT NULL DEFAULT 0,
+    cost_cents INTEGER NOT NULL DEFAULT 0,
+    low_stock_milli INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    archived_at INTEGER,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS product_variants_product ON product_variants (product_id)",
+  // A barcode or SKU belongs to one live variant at a time.
+  "CREATE UNIQUE INDEX IF NOT EXISTS product_variants_barcode ON product_variants (barcode) WHERE barcode <> '' AND archived_at IS NULL",
+  "CREATE UNIQUE INDEX IF NOT EXISTS product_variants_sku ON product_variants (sku COLLATE NOCASE) WHERE sku <> '' AND archived_at IS NULL",
 ];
 
 // Columns added to tables after they first shipped: [table, column, definition].

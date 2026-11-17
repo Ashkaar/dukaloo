@@ -158,6 +158,13 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+  /* Radix puts a hidden form input next to switches and checkboxes and
+     shifts it left by its own width; in right-to-left pages that pushes it
+     past the edge and makes the page scroll sideways. */
+  [data-slot="switch"] + input[aria-hidden="true"],
+  [data-slot="checkbox"] + input[aria-hidden="true"] {
+    transform: none !important;
+  }
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;

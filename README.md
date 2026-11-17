@@ -19,8 +19,8 @@ Turkish, in light and dark mode.
 | Many shops, Ariloo sign-in, plans, closed-shop pages | Done |
 | Owner password, staff logins with per-section access, owner unlock on shared tills | Done |
 | Dashboard, Settings (theme, language, shop details from Ariloo) | Done |
-| Products and variants, barcodes and labels | Next |
-| Till: scanner and camera input, cart, payments, receipts, cash drawer, returns | Planned |
+| Products with variants (size, colour…), categories, barcodes, label printing | Done |
+| Till: scanner and camera input, cart, payments, receipts, cash drawer, returns | Next |
 | Stock movements, purchases, suppliers, counts, low-stock alerts | Planned |
 | Customers, expenses, invoices | Planned |
 | Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
@@ -120,6 +120,30 @@ Set these in the Vercel project (Production). Never commit them.
   `sw.js`, `offline.html`, `manifest.webmanifest`, `icon`, `apple-icon`.
 - Later, optionally: a `timezone` column per shop (until then all shops use
   `SHOP_TIMEZONE`).
+
+## Products
+
+- **Every product has variants.** A product without options has a single
+  variant; a product with options (up to 3, such as Size and Colour) has one
+  variant per combination. Only variants are sold, counted and labelled, and
+  each has its own selling price, cost price, SKU, barcode and low-stock
+  alert level. Turning a value off or removing it never loses the others'
+  prices or codes.
+- **Units** are built in and translated (piece, pack, box, pair, set, kg, g,
+  L, mL, m, cm); weighed and measured units can be sold in parts.
+- **Barcodes**: scan the manufacturer's code into the barcode field with a
+  USB scanner (it types like a keyboard), type it, or press "Make barcode"
+  for an in-store EAN-13 starting with `2`, from a per-shop counter. A
+  barcode or SKU belongs to one live variant at a time (enforced by the
+  database). On the products list, a scan anywhere on the page searches for
+  that code (`components/use-scanner.ts`).
+- **Labels**: "Print labels" opens a print window with Code 128 / EAN
+  barcodes (bwip-js), the name, the variant and optionally the price, for
+  50 × 30 mm or 38 × 25 mm label printers or A4 sheets (3 × 8).
+- **Deleting** a product archives it (`archived_at`), so past sales and stock
+  records can still name it; its barcodes and SKUs become free again.
+- **Large catalogues**: the list is searched on the server (name, brand,
+  SKU, barcode) and loaded 50 at a time.
 
 ## Conventions
 

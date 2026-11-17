@@ -4,7 +4,7 @@
 //
 // A section is added here when its screens ship.
 
-export const SECTIONS = ["dashboard", "staff", "settings"] as const;
+export const SECTIONS = ["dashboard", "products", "staff", "settings"] as const;
 
 export type Section = (typeof SECTIONS)[number];
 
@@ -17,6 +17,7 @@ export const STAFF_SECTIONS: Section[] = SECTIONS.filter((s) => !OWNER_SECTIONS.
 
 export const SECTION_HREF: Record<Section, string> = {
   dashboard: "/dashboard",
+  products: "/dashboard/products",
   staff: "/dashboard/staff",
   settings: "/dashboard/settings",
 };

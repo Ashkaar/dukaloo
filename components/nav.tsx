@@ -1,4 +1,4 @@
-import { LayoutDashboardIcon, SettingsIcon, UsersIcon, type LucideIcon } from "lucide-react";
+import { LayoutDashboardIcon, PackageIcon, SettingsIcon, UsersIcon, type LucideIcon } from "lucide-react";
 import type { Messages } from "@/lib/i18n";
 import { SECTION_HREF, type Section } from "@/lib/sections";
 
@@ -6,6 +6,7 @@ import { SECTION_HREF, type Section } from "@/lib/sections";
 // place on the phone's bottom bar; the rest go under "More".
 export const NAV: Record<Section, { icon: LucideIcon; label: (t: Messages) => string; primary: boolean }> = {
   dashboard: { icon: LayoutDashboardIcon, label: (t) => t.nav.dashboard, primary: true },
+  products: { icon: PackageIcon, label: (t) => t.nav.products, primary: true },
   staff: { icon: UsersIcon, label: (t) => t.nav.staff, primary: false },
   settings: { icon: SettingsIcon, label: (t) => t.nav.settings, primary: false },
 };
