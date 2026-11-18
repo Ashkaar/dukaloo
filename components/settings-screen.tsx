@@ -14,6 +14,7 @@ import { saveLanguage } from "./language";
 import { PageBody, PageHeader } from "./page-header";
 import { useShop } from "./shop-provider";
 import { useTheme, type ThemeChoice } from "./theme";
+import { TimeZoneCard } from "./time-zone-card";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
@@ -110,6 +111,7 @@ export function SettingsScreen({ viewer, shop }: { viewer: Viewer; shop: ShopFac
         </Card>
 
         <div className="space-y-4">
+          <TimeZoneCard canChange={viewer.isOwner} />
           <Card>
             <CardHeader>
               <div>

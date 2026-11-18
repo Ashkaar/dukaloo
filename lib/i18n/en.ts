@@ -67,6 +67,10 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      timeZone: {
+        title: "Time zone",
+        text: "Dates and times follow each device's time zone, or one zone the owner chooses in Settings.",
+      },
       catalog: {
         title: "Products, variants and barcodes",
         text: "Add your products with sizes, colours and other options. Each variant has its own price and barcode, and you can print barcode labels.",
@@ -168,6 +172,11 @@ const en = {
     ownerPassword: "Owner password",
     changeOwnerPassword: "Change owner password",
     lockDevice: "Lock owner screens on this device",
+    timeZone: "Time zone",
+    timeZoneDevice: "Each device's own time zone",
+    timeZoneDeviceIs: (zone: string) => `This device: ${zone}`,
+    timeZoneNote: "Dates, times and \"today\" in reports follow this. Choose one zone if your devices are set to different ones.",
+    timeZoneOwnerOnly: "Only the owner can change this.",
   },
 
   plans: {

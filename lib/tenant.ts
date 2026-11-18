@@ -1,7 +1,6 @@
 import "server-only";
 import { createClient, type Client } from "@libsql/client";
 import { headers } from "next/headers";
-import { DEFAULT_TIME_ZONE } from "./format";
 import { isShopSlug, shopStateOf, isOpenState, type PlanId, type ShopState } from "./shopState";
 
 // Many shops on one Dukaloo.
@@ -147,13 +146,8 @@ export interface ShopProfile {
   decimals: 0 | 2;
   lang: string;
   logoUrl: string | null;
-  // The shop's time zone, for dates and "today". Ariloo has no column for
-  // it yet, so it is SHOP_TIMEZONE or Asia/Baghdad for every shop.
-  timeZone: string;
   createdAt: number;
 }
-
-const shopTimeZone = () => process.env.SHOP_TIMEZONE || DEFAULT_TIME_ZONE;
 
 export function profileOf(shop: Shop | null): ShopProfile {
   if (shop) {
@@ -165,7 +159,6 @@ export function profileOf(shop: Shop | null): ShopProfile {
       decimals: shop.decimals,
       lang: shop.lang,
       logoUrl: shop.logoUrl,
-      timeZone: shopTimeZone(),
       createdAt: shop.createdAt,
     };
   }
@@ -177,7 +170,6 @@ export function profileOf(shop: Shop | null): ShopProfile {
     decimals: process.env.SHOP_DECIMALS === "0" ? 0 : 2,
     lang: process.env.SHOP_LANG || "en",
     logoUrl: null,
-    timeZone: shopTimeZone(),
     createdAt: 0,
   };
 }

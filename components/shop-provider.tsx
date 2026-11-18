@@ -14,7 +14,9 @@ export interface ShopInfo {
   logoUrl: string | null;
   currency: string;
   decimals: 0 | 2;
+  // The zone dates are shown in, and the shop's choice ("device" or a zone).
   timeZone: string;
+  timeZoneSetting: string;
   // Where the owner manages the subscription; null in single-shop mode.
   accountUrl: string | null;
 }
@@ -27,6 +29,7 @@ const ShopContext = createContext<ShopInfo>({
   currency: "USD",
   decimals: 2,
   timeZone: "Asia/Baghdad",
+  timeZoneSetting: "device",
   accountUrl: null,
 });
 

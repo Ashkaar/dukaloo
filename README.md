@@ -64,7 +64,6 @@ Set these in the Vercel project (Production). Never commit them.
 | `SHOPS_DB_TOKEN` | A Turso group token that opens every shop's own database (`db_url` in Ariloo). |
 | `DUKALOO_SSO_SECRET` | Shared with Ariloo; checks the one-minute "Open Dukaloo" link. Without it, owners can't arrive from Ariloo. |
 | `ARILOO_URL` | Where Ariloo lives, for shop logos and account links. Default `https://ariloo.app`. |
-| `SHOP_TIMEZONE` | The time zone for dates and "today". Default `Asia/Baghdad` (Ariloo has no per-shop column for it yet). |
 | `DB_TURSO_DATABASE_URL`, `DB_TURSO_AUTH_TOKEN` | Single-shop mode only: the one shop's database. |
 | `OWNER_PASSWORD` | Single-shop mode only: the owner password until one is chosen in the app. |
 | `SHOP_NAME`, `SHOP_CURRENCY`, `SHOP_DECIMALS`, `SHOP_LANG` | Single-shop mode only: the shop's details, which Ariloo provides in many-shop mode. |
@@ -118,8 +117,7 @@ Set these in the Vercel project (Production). Never commit them.
 - Refuse these as Dukaloo shop addresses, because they are the app's own
   paths (`lib/appRoots.ts`): `api`, `dashboard`, `login`, `owner-password`,
   `sw.js`, `offline.html`, `manifest.webmanifest`, `icon`, `apple-icon`.
-- Later, optionally: a `timezone` column per shop (until then all shops use
-  `SHOP_TIMEZONE`).
+- Nothing for time zones: each shop sets its own in Dukaloo's Settings.
 
 ## Products
 
@@ -152,6 +150,10 @@ Set these in the Vercel project (Production). Never commit them.
 - **Formatting** (`lib/format.ts`) gives identical text on server and
   browser: Western digits, fixed grouping, month names from our own
   dictionaries, and times in the shop's time zone.
+- **Time zone**: by default each device uses its own; it reports its zone
+  in the `dukaloo_tz` cookie (`components/time-zone-sync.tsx`) so the
+  server renders dates as that browser will. The owner can instead pick one
+  zone for every device in Settings (`time_zone` in `shop_settings`).
 - **Server-only code** (database, crypto, secrets) starts with
   `import "server-only"`; shared types and Zod schemas are client-safe.
 - **Every API route and page checks access itself** and validates every

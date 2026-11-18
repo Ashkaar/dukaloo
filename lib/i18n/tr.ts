@@ -63,6 +63,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      timeZone: {
+        title: "Saat dilimi",
+        text: "Tarihler ve saatler her cihazın saat dilimine ya da sahibin Ayarlar'da seçtiği dilime göre gösterilir.",
+      },
       catalog: {
         title: "Ürünler, varyantlar ve barkodlar",
         text: "Ürünlerinizi beden, renk ve diğer seçeneklerle ekleyin. Her varyantın kendi fiyatı ve barkodu olur; barkod etiketleri de yazdırabilirsiniz.",
@@ -164,6 +168,11 @@ const tr: Messages = {
     ownerPassword: "Sahip şifresi",
     changeOwnerPassword: "Sahip şifresini değiştir",
     lockDevice: "Bu cihazda sahip ekranlarını kilitle",
+    timeZone: "Saat dilimi",
+    timeZoneDevice: "Her cihazın kendi saat dilimi",
+    timeZoneDeviceIs: (zone: string) => `Bu cihaz: ${zone}`,
+    timeZoneNote: "Tarihler, saatler ve raporlardaki \"bugün\" buna göre belirlenir. Cihazlarınız farklı dilimlere ayarlıysa tek bir dilim seçin.",
+    timeZoneOwnerOnly: "Bunu yalnızca mağaza sahibi değiştirebilir.",
   },
 
   plans: {

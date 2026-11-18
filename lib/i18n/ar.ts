@@ -63,6 +63,10 @@ const ar: Messages = {
     markRead: "تعليم الكل كمقروء",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      timeZone: {
+        title: "المنطقة الزمنية",
+        text: "تتبع التواريخ والأوقات المنطقة الزمنية لكل جهاز، أو منطقة واحدة يختارها المالك من الإعدادات.",
+      },
       catalog: {
         title: "المنتجات والأصناف والباركود",
         text: "أضف منتجاتك بالمقاسات والألوان وخيارات أخرى. لكل صنف سعره وباركوده، ويمكنك طباعة ملصقات الباركود.",
@@ -164,6 +168,11 @@ const ar: Messages = {
     ownerPassword: "كلمة مرور المالك",
     changeOwnerPassword: "تغيير كلمة مرور المالك",
     lockDevice: "قفل شاشات المالك على هذا الجهاز",
+    timeZone: "المنطقة الزمنية",
+    timeZoneDevice: "المنطقة الزمنية لكل جهاز",
+    timeZoneDeviceIs: (zone: string) => `هذا الجهاز: ${zone}`,
+    timeZoneNote: "تتبعها التواريخ والأوقات و«اليوم» في التقارير. اختر منطقة واحدة إذا كانت أجهزتك مضبوطة على مناطق مختلفة.",
+    timeZoneOwnerOnly: "يمكن للمالك فقط تغيير هذا.",
   },
 
   plans: {

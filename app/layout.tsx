@@ -9,6 +9,9 @@ import { THEME_INIT_SCRIPT } from "@/components/theme";
 import { Toaster } from "@/components/ui/sonner";
 import { LANGUAGES, MESSAGES } from "@/lib/i18n";
 import { getLang, getOverrides } from "@/lib/i18n/server";
+import { requestTimeZone } from "@/lib/settingsDb";
+import { DEFAULT_TIME_ZONE } from "@/lib/format";
+import { TimeZoneSync } from "@/components/time-zone-sync";
 import { accountUrl, currentShop, multiShop, profileOf, shopBase, ShopError, type Shop } from "@/lib/tenant";
 import "./globals.css";
 
@@ -78,6 +81,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const closed = shop !== null && !shop.open;
   const blocked = problem !== null || closed;
   const overrides = blocked ? {} : await getOverrides(lang);
+  const zone = blocked ? { setting: "device", timeZone: DEFAULT_TIME_ZONE } : await requestTimeZone();
   const account = multiShop() ? accountUrl() : null;
 
   const info: ShopInfo = {
@@ -87,7 +91,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     logoUrl: profile.logoUrl,
     currency: profile.currency,
     decimals: profile.decimals,
-    timeZone: profile.timeZone,
+    timeZone: zone.timeZone,
+    timeZoneSetting: zone.setting,
     accountUrl: account,
   };
 
@@ -127,6 +132,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ShopProvider value={info}>
             <I18nProvider lang={lang} overrides={overrides}>
               {children}
+              <TimeZoneSync />
               <Toaster dir={LANGUAGES[lang].dir} />
             </I18nProvider>
           </ShopProvider>
