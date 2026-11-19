@@ -70,6 +70,10 @@ const ar: Messages = {
     markRead: "تعليم الكل كمقروء",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      credit: {
+        title: "البيع على الحساب",
+        text: "فعّله من الإعدادات ليدفع الزبائن الدائمون لاحقًا. شاهد ما على كل زبون، وسجّل دفعاته، واطّلع على مجموع الديون في التقارير.",
+      },
       offline: {
         title: "يعمل دون اتصال",
         text: "ثبّت Dukaloo على نقطة البيع أو الهاتف أو الجهاز اللوحي. عند انقطاع الاتصال واصل البيع: تُحفظ المبيعات والمصروفات على الجهاز وتُرسل عند عودته.",
@@ -383,6 +387,7 @@ const ar: Messages = {
       cash: "نقدًا",
       card: "بطاقة",
       transfer: "تحويل",
+      credit: "على الحساب",
     },
     method: "طريقة الدفع",
     received: "المستلَم",
@@ -680,6 +685,28 @@ const ar: Messages = {
     badge: "دون اتصال",
     savedOffline: "حُفظ على هذا الجهاز. سيُرسل عند عودة الاتصال.",
     receiptTitle: "بيع دون اتصال",
+  },
+
+  credit: {
+    needsCustomer: "اختر زبونًا للبيع على الحساب.",
+    off: "البيع على الحساب متوقف في الإعدادات.",
+    owes: (amount: string) => `عليه ${amount}`,
+    chooseCustomer: "اختر زبونًا للبيع على الحساب.",
+    received: "من الزبائن",
+    receivedNote: "تسديدات البيع على الحساب، محسوبة أعلاه",
+    owedTotal: "ديون الزبائن",
+    receivedIn: (amount: string) => `${amount} سُدّد في هذه الفترة`,
+    setting: "البيع على الحساب",
+    settingNote: "اسمح للزبائن الدائمين بأخذ البضاعة الآن والدفع لاحقًا. يحتاج البيع إلى زبون، ويظهر رصيده في صفحته.",
+    notInPlan: "غير متاح في خطتك. قم بالترقية في Ariloo للبيع على الحساب.",
+    account: "الحساب",
+    owedNow: "المستحق الآن",
+    inCredit: (amount: string) => `له رصيد ${amount}`,
+    nothingOwed: "لا شيء مستحق",
+    recordPayment: "تسجيل دفعة",
+    payments: "الدفعات",
+    paymentSaved: "تم تسجيل الدفعة.",
+    deletePayment: "حذف هذه الدفعة؟",
   },
 
   errors: {

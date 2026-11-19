@@ -17,7 +17,27 @@ export interface CustomerSummary extends Customer {
   visits: number;
   spentCents: number;
   lastVisit: number | null;
+  // What they owe from credit sales, after repayments and credit refunds.
+  balanceCents: number;
 }
+
+// A repayment towards what a customer owes.
+export interface CustomerPayment {
+  id: number;
+  at: number;
+  amountCents: number;
+  method: "cash" | "card" | "transfer";
+  note: string;
+  staffName: string;
+}
+
+export const newCustomerPaymentSchema = z.object({
+  clientId: z.string().regex(/^[A-Za-z0-9_-]{8,64}$/),
+  amountCents: z.number().int().min(1).max(10_000_000_000_000),
+  method: z.enum(["cash", "card", "transfer"]),
+  note: z.string().trim().max(200),
+});
+export type NewCustomerPayment = z.infer<typeof newCustomerPaymentSchema>;
 
 // Phone numbers are kept as digits (and a leading +), so "0750 123 4567"
 // and "07501234567" are the same customer.

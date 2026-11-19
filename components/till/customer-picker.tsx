@@ -13,11 +13,13 @@ import { Input } from "../ui/input";
 export interface PickedCustomer {
   id: number;
   name: string;
+  // What they owe already (credit sales), when known.
+  balanceCents: number;
 }
 
 // Find a customer by name or phone for this sale, or add one on the spot.
 export function CustomerPicker({ current, onClose, onPick }: { current: PickedCustomer | null; onClose: () => void; onPick: (c: PickedCustomer | null) => void }) {
-  const { t } = useI18n();
+  const { t, money } = useI18n();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<CustomerSummary[]>([]);
   const [adding, setAdding] = useState(false);
@@ -39,7 +41,7 @@ export function CustomerPicker({ current, onClose, onPick }: { current: PickedCu
   }, [q]);
 
   if (adding) {
-    return <CustomerDialog customer={null} quick initialName={q} onClose={() => setAdding(false)} onSaved={(c) => onPick({ id: c.id, name: c.name })} />;
+    return <CustomerDialog customer={null} quick initialName={q} onClose={() => setAdding(false)} onSaved={(c) => onPick({ id: c.id, name: c.name, balanceCents: 0 })} />;
   }
 
   return (
@@ -57,9 +59,16 @@ export function CustomerPicker({ current, onClose, onPick }: { current: PickedCu
           {results.length === 0 && <li className="px-3 py-4 text-center text-sm text-muted-foreground">{t.customers.noneFound}</li>}
           {results.map((c) => (
             <li key={c.id}>
-              <button type="button" onClick={() => onPick({ id: c.id, name: c.name })} className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-start hover:bg-highlight">
-                <span className="truncate font-medium">{c.name}</span>
-                {c.phone && <bdi className="text-xs text-muted-foreground">{c.phone}</bdi>}
+              <button
+                type="button"
+                onClick={() => onPick({ id: c.id, name: c.name, balanceCents: c.balanceCents })}
+                className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-start hover:bg-highlight"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">{c.name}</span>
+                  {c.phone && <bdi className="block text-xs text-muted-foreground">{c.phone}</bdi>}
+                </span>
+                {c.balanceCents > 0 && <span className="tabular shrink-0 text-xs font-semibold text-accent-700 dark:text-accent-400">{t.credit.owes(money(c.balanceCents))}</span>}
               </button>
             </li>
           ))}

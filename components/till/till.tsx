@@ -4,6 +4,7 @@ import { BadgePercentIcon, ContactRoundIcon, MinusIcon, PackageIcon, PlusIcon, S
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DECIMAL_UNITS, type Category, type Unit } from "@/lib/catalog";
+import type { Feature } from "@/lib/plans";
 import { ApiError, errorMessage, getJson } from "@/lib/clientApi";
 import { MILLI } from "@/lib/format";
 import { computeTotals, type Sale, type SaleDiscount, type SalesSettings, type TillItem } from "@/lib/sale";
@@ -33,7 +34,19 @@ const ALL = 0;
 // The time of an offline sale (outside the component: only called on payment).
 const now = () => Date.now();
 
-export function Till({ initialItems, initialSettings, categories }: { initialItems: TillItem[]; initialSettings: SalesSettings; categories: Category[] }) {
+export function Till({
+  initialItems,
+  initialSettings,
+  categories,
+  features = [],
+  customersEnabled = true,
+}: {
+  initialItems: TillItem[];
+  initialSettings: SalesSettings;
+  categories: Category[];
+  features?: readonly Feature[];
+  customersEnabled?: boolean;
+}) {
   const { t, money, quantity } = useI18n();
   const { decimals } = useShop();
   const [items, setItems] = useState(initialItems);
@@ -256,6 +269,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
         )}
       </div>
       <div className="space-y-1.5 border-t border-border px-4 py-3 text-sm">
+        {customersEnabled && (
         <button
           type="button"
           onClick={() => setPicking(true)}
@@ -263,7 +277,11 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
         >
           <ContactRoundIcon className="size-4 text-muted-foreground" />
           <span className={cn("min-w-0 flex-1 truncate", customer ? "font-semibold" : "text-muted-foreground")}>{customer ? customer.name : t.customers.addToSale}</span>
+          {customer && customer.balanceCents > 0 && (
+            <span className="tabular shrink-0 text-xs font-semibold text-accent-700 dark:text-accent-400">{t.credit.owes(money(customer.balanceCents))}</span>
+          )}
         </button>
+        )}
         <Row label={t.till.subtotal} value={money(totals.subtotalCents)} />
         {totals.discountCents > 0 && <Row label={t.till.discount} value={`-${money(totals.discountCents)}`} accent />}
         {settings.tax.enabled && totals.taxCents > 0 && !settings.tax.inclusive && <Row label={`${settings.tax.name} ${rate}`} value={money(totals.taxCents)} />}
@@ -438,7 +456,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
           }}
         />
       )}
-      {paying && <PayDialog cart={cart} discount={discount} customerId={customer?.id ?? null} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} onOffline={finishedOffline} />}
+      {paying && <PayDialog cart={cart} discount={discount} customerId={customer?.id ?? null} creditEnabled={settings.creditSales && features.includes("credit")} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} onOffline={finishedOffline} />}
       {done && <ReceiptDialog sale={done} settings={settings} onClose={() => setDone(null)} />}
     </div>
   );

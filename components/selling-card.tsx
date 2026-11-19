@@ -15,7 +15,7 @@ import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
 
 // Selling rules: stock, tax and the receipt. Owner only; others see them.
-export function SellingCard({ initial, canChange }: { initial: SalesSettings; canChange: boolean }) {
+export function SellingCard({ initial, canChange, creditInPlan = true }: { initial: SalesSettings; canChange: boolean; creditInPlan?: boolean }) {
   const { t } = useI18n();
   const [s, setS] = useState(initial);
   const [rate, setRate] = useState(String(initial.tax.rateBp / 100));
@@ -40,13 +40,13 @@ export function SellingCard({ initial, canChange }: { initial: SalesSettings; ca
     }
   };
 
-  const toggle = (label: string, note: string, checked: boolean, onChange: (v: boolean) => void) => (
+  const toggle = (label: string, note: string, checked: boolean, onChange: (v: boolean) => void, disabled = false) => (
     <Label className="flex cursor-pointer items-start justify-between gap-4">
       <span>
         <span className="block font-medium">{label}</span>
         {note && <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{note}</span>}
       </span>
-      <Switch checked={checked} onCheckedChange={onChange} disabled={off} />
+      <Switch checked={checked} onCheckedChange={onChange} disabled={off || disabled} />
     </Label>
   );
 
@@ -60,6 +60,7 @@ export function SellingCard({ initial, canChange }: { initial: SalesSettings; ca
       </CardHeader>
       <CardContent className="space-y-6">
         {toggle(t.selling.allowNegative, t.selling.allowNegativeNote, s.allowNegativeStock, (v) => setS({ ...s, allowNegativeStock: v }))}
+        {toggle(t.credit.setting, creditInPlan ? t.credit.settingNote : t.credit.notInPlan, s.creditSales && creditInPlan, (v) => setS({ ...s, creditSales: v }), !creditInPlan)}
 
         <div className="space-y-4 border-t border-border pt-5">
           {toggle(t.selling.taxEnabled, "", s.tax.enabled, (v) => setS({ ...s, tax: { ...s.tax, enabled: v } }))}

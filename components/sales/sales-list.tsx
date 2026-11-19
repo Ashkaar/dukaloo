@@ -1,11 +1,11 @@
 "use client";
 
-import { BanknoteIcon, ChevronLeftIcon, FileTextIcon, ChevronRightIcon, CreditCardIcon, PrinterIcon, ReceiptTextIcon, SmartphoneIcon, Undo2Icon, XCircleIcon } from "lucide-react";
+import { BanknoteIcon, ChevronLeftIcon, FileTextIcon, NotebookPenIcon, ChevronRightIcon, CreditCardIcon, PrinterIcon, ReceiptTextIcon, SmartphoneIcon, Undo2Icon, XCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { errorMessage, getJson, sendJson } from "@/lib/clientApi";
 import { nextDay } from "@/lib/format";
-import type { PaymentMethod, Sale, SaleSummary, SalesSettings } from "@/lib/sale";
+import type { Sale, SaleMethod, SaleSummary, SalesSettings } from "@/lib/sale";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "../confirm-dialog";
 import { useI18n } from "../i18n-provider";
@@ -22,10 +22,10 @@ import { ReturnDialog } from "./return-dialog";
 export interface DayOfSales {
   day: string;
   sales: SaleSummary[];
-  totals: { count: number; totalCents: number; refundCents: number; byMethod: Record<PaymentMethod, number> };
+  totals: { count: number; totalCents: number; refundCents: number; receivedCents: number; byMethod: Record<SaleMethod, number> };
 }
 
-const ICONS: Record<PaymentMethod, typeof BanknoteIcon> = { cash: BanknoteIcon, card: CreditCardIcon, transfer: SmartphoneIcon };
+const ICONS: Record<SaleMethod, typeof BanknoteIcon> = { cash: BanknoteIcon, card: CreditCardIcon, transfer: SmartphoneIcon, credit: NotebookPenIcon };
 
 const previousDay = (day: string) => {
   const [y, m, d] = day.split("-").map(Number);
@@ -87,10 +87,13 @@ export function SalesList({ first, today, settings, canVoid }: { first: DayOfSal
           note={data.totals.refundCents > 0 ? t.returns.refundsToday(money(data.totals.refundCents)) : undefined}
         />
         <Stat label={t.sales.countLabel} value={String(data.totals.count)} />
-        {(["cash", "card", "transfer"] as const).map((m) => {
-          const Icon = ICONS[m];
-          return <Stat key={m} label={t.till.methods[m]} value={money(data.totals.byMethod[m])} icon={<Icon className="size-4" />} />;
-        })}
+        {(["cash", "card", "transfer", "credit"] as const)
+          .filter((m) => m !== "credit" || data.totals.byMethod.credit !== 0)
+          .map((m) => {
+            const Icon = ICONS[m];
+            return <Stat key={m} label={t.till.methods[m]} value={money(data.totals.byMethod[m])} icon={<Icon className="size-4" />} />;
+          })}
+        {data.totals.receivedCents > 0 && <Stat label={t.credit.received} value={money(data.totals.receivedCents)} note={t.credit.receivedNote} />}
       </div>
 
       {data.sales.length === 0 ? (

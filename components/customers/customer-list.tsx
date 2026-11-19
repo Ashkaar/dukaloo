@@ -89,7 +89,10 @@ export function CustomerList({ first }: { first: Page }) {
                   {[c.phone && <bdi key="p">{c.phone}</bdi>, t.customers.visits(c.visits), c.lastVisit ? t.customers.lastVisit(date(c.lastVisit)) : ""].filter(Boolean).reduce<React.ReactNode[]>((acc, x, i) => (i ? [...acc, " · ", x] : [x]), [])}
                 </p>
               </div>
-              <span className="tabular text-sm font-bold">{money(c.spentCents)}</span>
+              <span className="text-end">
+                <span className="tabular block text-sm font-bold">{money(c.spentCents)}</span>
+                {c.balanceCents > 0 && <span className="tabular block text-xs font-semibold text-accent-700 dark:text-accent-400">{t.credit.owes(money(c.balanceCents))}</span>}
+              </span>
             </Link>
           ))}
         </Card>

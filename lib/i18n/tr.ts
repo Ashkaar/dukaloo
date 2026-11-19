@@ -70,6 +70,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      credit: {
+        title: "Veresiye satış",
+        text: "Düzenli müşterilerin sonra ödemesi için Ayarlar’dan açın. Her müşterinin borcunu görün, ödemelerini kaydedin ve toplam borcu Raporlar’da görün.",
+      },
       offline: {
         title: "Çevrimdışı çalışır",
         text: "Dukaloo’yu kasaya, telefona veya tablete kurun. Bağlantı kesilince satışa devam edin: satışlar ve giderler cihazda tutulur, bağlantı gelince gönderilir.",
@@ -383,6 +387,7 @@ const tr: Messages = {
       cash: "Nakit",
       card: "Kart",
       transfer: "Havale",
+      credit: "Veresiye",
     },
     method: "Ödeme yöntemi",
     received: "Alınan",
@@ -680,6 +685,28 @@ const tr: Messages = {
     badge: "Çevrimdışı",
     savedOffline: "Bu cihaza kaydedildi. Bağlantı gelince gönderilecek.",
     receiptTitle: "Çevrimdışı satış",
+  },
+
+  credit: {
+    needsCustomer: "Veresiye satış için bir müşteri seçin.",
+    off: "Veresiye satış Ayarlar’da kapalı.",
+    owes: (amount: string) => `Borcu ${amount}`,
+    chooseCustomer: "Veresiye satış için bir müşteri seçin.",
+    received: "Müşterilerden",
+    receivedNote: "Veresiye satış ödemeleri, yukarıya dahil",
+    owedTotal: "Müşteri borçları",
+    receivedIn: (amount: string) => `Bu dönemde ${amount} ödendi`,
+    setting: "Veresiye satış",
+    settingNote: "Düzenli müşterilerin malı şimdi alıp sonra ödemesine izin verin. Satış bir müşteri gerektirir ve bakiyesi müşterinin sayfasında görünür.",
+    notInPlan: "Planınızda yok. Veresiye satış için Ariloo’da planınızı yükseltin.",
+    account: "Hesap",
+    owedNow: "Şu anki borç",
+    inCredit: (amount: string) => `${amount} alacaklı`,
+    nothingOwed: "Borcu yok",
+    recordPayment: "Ödeme kaydet",
+    payments: "Ödemeler",
+    paymentSaved: "Ödeme kaydedildi.",
+    deletePayment: "Bu ödeme silinsin mi?",
   },
 
   errors: {

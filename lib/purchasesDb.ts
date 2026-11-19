@@ -185,7 +185,7 @@ export async function listPurchases(limit: number, offset: number): Promise<{ it
         reference: purchases.reference,
         totalCents: purchases.totalCents,
         status: purchases.status,
-        itemCount: sql<number>`(SELECT COUNT(*) FROM purchase_lines l WHERE l.purchase_id = ${purchases.id})`,
+        itemCount: sql<number>`(SELECT COUNT(*) FROM purchase_lines l WHERE l.purchase_id = purchases.id)`,
       })
       .from(purchases)
       .orderBy(desc(purchases.at))

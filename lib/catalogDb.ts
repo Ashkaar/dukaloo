@@ -34,7 +34,7 @@ export async function listCategories(): Promise<Category[]> {
     .select({
       id: categories.id,
       name: categories.name,
-      productCount: sql<number>`(SELECT COUNT(*) FROM products p WHERE p.category_id = ${categories.id} AND p.archived_at IS NULL)`,
+      productCount: sql<number>`(SELECT COUNT(*) FROM products p WHERE p.category_id = categories.id AND p.archived_at IS NULL)`,
     })
     .from(categories)
     .orderBy(asc(categories.sortOrder), sql`${categories.name} COLLATE NOCASE`);

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { Customer } from "@/lib/customers";
+import type { Customer, CustomerPayment } from "@/lib/customers";
+import { CustomerAccount } from "./customer-account";
 import { sendJson } from "@/lib/clientApi";
 import type { SaleSummary } from "@/lib/sale";
 import { ConfirmDialog } from "../confirm-dialog";
@@ -17,7 +18,14 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { CustomerDialog } from "./customer-dialog";
 
-export function CustomerPage({ customer: initial, sales }: { customer: Customer; sales: SaleSummary[] }) {
+export interface AccountInfo {
+  balanceCents: number;
+  payments: CustomerPayment[];
+  creditEnabled: boolean;
+  canDelete: boolean;
+}
+
+export function CustomerPage({ customer: initial, sales, account }: { customer: Customer; sales: SaleSummary[]; account?: AccountInfo }) {
   const { t, money, dateTime } = useI18n();
   const shop = useShop();
   const router = useRouter();
@@ -84,7 +92,9 @@ export function CustomerPage({ customer: initial, sales }: { customer: Customer;
             </div>
           </CardContent>
         </Card>
-        <Card className="lg:col-span-2">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
+        {account && (account.creditEnabled || account.balanceCents !== 0 || account.payments.length > 0) && <CustomerAccount customerId={customer.id} initial={account} />}
+        <Card>
           <CardHeader>
             <CardTitle>{t.customers.history}</CardTitle>
           </CardHeader>
@@ -108,6 +118,7 @@ export function CustomerPage({ customer: initial, sales }: { customer: Customer;
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
       {editing && (
         <CustomerDialog

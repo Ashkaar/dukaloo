@@ -18,6 +18,7 @@ import { TimeZoneCard } from "./time-zone-card";
 import { SellingCard } from "./selling-card";
 import { BackupCard } from "./backup-card";
 import type { SalesSettings } from "@/lib/sale";
+import type { Feature } from "@/lib/plans";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
@@ -30,7 +31,7 @@ export interface ShopFacts {
   accountUrl: string | null;
 }
 
-export function SettingsScreen({ viewer, shop, selling }: { viewer: Viewer; shop: ShopFacts; selling: SalesSettings }) {
+export function SettingsScreen({ viewer, shop, selling, features = [] }: { viewer: Viewer; shop: ShopFacts; selling: SalesSettings; features?: readonly Feature[] }) {
   const { t, lang } = useI18n();
   const router = useRouter();
   const { href } = useShop();
@@ -114,7 +115,7 @@ export function SettingsScreen({ viewer, shop, selling }: { viewer: Viewer; shop
         </Card>
 
         <div className="space-y-4">
-          <SellingCard initial={selling} canChange={viewer.isOwner} />
+          <SellingCard initial={selling} canChange={viewer.isOwner} creditInPlan={features.includes("credit")} />
           <TimeZoneCard canChange={viewer.isOwner} />
           <Card>
             <CardHeader>

@@ -168,7 +168,7 @@ export function ReportsScreen({ today, first }: { today: string; first: Report }
           <div className="space-y-4">
             <Table title={t.reports.byMethod} empty={t.reports.noData} head={[t.reports.method, t.reports.amount]}>
               {methodTotal !== 0 &&
-                (["cash", "card", "transfer"] as const).map((m) => (
+                (["cash", "card", "transfer", "credit"] as const).filter((m) => m !== "credit" || report.byMethod.credit !== 0).map((m) => (
                   <tr key={m}>
                     <td className="py-1.5">{t.till.methods[m]}</td>
                     <td className="tabular py-1.5 text-end">{money(report.byMethod[m])}</td>
@@ -206,6 +206,9 @@ export function ReportsScreen({ today, first }: { today: string; first: Report }
         <div className="grid gap-4 lg:grid-cols-3">
           <Tile label={t.reports.stockAtCost} value={money(report.stock.costValueCents)} note={t.reports.now} />
           <Tile label={t.reports.stockAtPrice} value={money(report.stock.priceValueCents)} note={t.reports.now} />
+          {(report.owedCents > 0 || report.receivedCents > 0) && (
+            <Tile label={t.credit.owedTotal} value={money(report.owedCents)} note={report.receivedCents > 0 ? t.credit.receivedIn(money(report.receivedCents)) : t.reports.now} />
+          )}
           <Table title={t.reports.lowStock} empty={t.reports.noLowStock} head={[t.reports.product, t.stock.inStock]}>
             {report.stock.low.map((l, i) => (
               <tr key={i}>

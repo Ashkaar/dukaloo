@@ -25,6 +25,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       if (result.reason === "not-found") return notFound();
       const t = (await getMessages()).returns;
       if (result.reason === "voided") return NextResponse.json({ error: t.saleVoided }, { status: 409 });
+      if (result.reason === "credit-customer") return badRequest((await getMessages()).credit.needsCustomer);
       return badRequest(t.tooMany);
     }
     await logActivity(actor || "owner", "return", `#${result.sale.number}`);

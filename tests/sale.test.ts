@@ -84,3 +84,19 @@ describe("refundFor", () => {
     expect(refundFor(sale, { qtyMilli: 1000, totalCents: 200000 }, 5000, 0)).toBe(180000);
   });
 });
+
+describe("sales on account", () => {
+  it("settle a sale put fully or partly on account, never giving change from it", () => {
+    expect(settle(1000, [{ method: "credit", cents: 1000 }])).toEqual({ paidCents: 1000, changeCents: 0 });
+    expect(settle(1000, [{ method: "cash", cents: 400 }, { method: "credit", cents: 600 }])).toEqual({ paidCents: 1000, changeCents: 0 });
+    expect(settle(1000, [{ method: "credit", cents: 1200 }])).toBeNull();
+    expect(settle(1000, [{ method: "credit", cents: 500 }])).toBeNull();
+  });
+  it("is off unless turned on, and the till may send it", () => {
+    expect(DEFAULT_SALES_SETTINGS.creditSales).toBe(false);
+    expect(normaliseSalesSettings({ creditSales: true }).creditSales).toBe(true);
+    expect(normaliseSalesSettings({ creditSales: "yes" }).creditSales).toBe(false);
+    const sale = { clientId: "abcdef12", lines: [{ variantId: 1, qtyMilli: 1000, discountCents: 0 }], discount: null, payments: [{ method: "credit", cents: 100 }], note: "", customerId: 3, expectedTotalCents: 100 };
+    expect(newSaleSchema.safeParse(sale).success).toBe(true);
+  });
+});
