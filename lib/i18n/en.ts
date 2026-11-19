@@ -69,6 +69,10 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      returns: {
+        title: "Returns",
+        text: "Give items back from any past sale, in full or in part. The refund is the item’s share of what was paid, and counted items go back into stock.",
+      },
       till: {
         title: "Till and sales",
         text: "Sell at the till with the barcode scanner or by tapping products, take cash, card, transfer or a mix, and print receipts. See every sale by day, reprint or void them. Tax and selling with no stock are options in Settings.",
@@ -429,6 +433,27 @@ const en = {
     saved: "Stock updated.",
     trackStock: "Count stock",
     trackStockNote: "Turn off for services and things you don’t count.",
+  },
+
+  returns: {
+    button: "Return items",
+    title: (n: number) => `Return from sale #${n}`,
+    intro: "Choose what the customer is giving back. The refund is their share of what they paid.",
+    canReturn: (q: string) => `Up to ${q} can be returned`,
+    qty: "Quantity returned",
+    refundBy: "Refund by",
+    refund: "Refund",
+    reason: "Reason (optional)",
+    confirm: "Return and refund",
+    done: (amount: string) => `Returned. Refund ${amount}.`,
+    refundsToday: (amount: string) => `After ${amount} refunded`,
+    returned: "Returned",
+    returnedOn: (date: string) => `Returned ${date}`,
+    printSlip: "Print return slip",
+    slip: (n: number) => `Return from #${n}`,
+    cantVoid: "This sale has returns, so it can’t be voided. Return the rest instead.",
+    saleVoided: "This sale was voided.",
+    tooMany: "That’s more than is left to return.",
   },
 
   errors: {

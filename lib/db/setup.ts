@@ -152,6 +152,31 @@ export const SCHEMA: string[] = [
     amount_cents INTEGER NOT NULL
   )`,
   "CREATE INDEX IF NOT EXISTS sale_payments_sale ON sale_payments (sale_id)",
+
+  // ---- Returns: items given back from a sale, and the money refunded ----
+  `CREATE TABLE IF NOT EXISTS sale_returns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_id INTEGER NOT NULL,
+    client_id TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    staff_name TEXT NOT NULL DEFAULT '',
+    refund_cents INTEGER NOT NULL,
+    method TEXT NOT NULL,
+    note TEXT NOT NULL DEFAULT ''
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS sale_returns_client_id ON sale_returns (client_id)",
+  "CREATE INDEX IF NOT EXISTS sale_returns_sale ON sale_returns (sale_id)",
+  "CREATE INDEX IF NOT EXISTS sale_returns_at ON sale_returns (at)",
+  `CREATE TABLE IF NOT EXISTS sale_return_lines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    return_id INTEGER NOT NULL,
+    sale_line_id INTEGER NOT NULL,
+    variant_id INTEGER NOT NULL,
+    qty_milli INTEGER NOT NULL,
+    refund_cents INTEGER NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS sale_return_lines_return ON sale_return_lines (return_id)",
+  "CREATE INDEX IF NOT EXISTS sale_return_lines_line ON sale_return_lines (sale_line_id)",
 ];
 
 // Columns added to tables after they first shipped: [table, column, definition].

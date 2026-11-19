@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dir, Messages } from "@/lib/i18n";
-import type { Sale, SalesSettings } from "@/lib/sale";
+import type { Sale, SaleReturn, SalesSettings } from "@/lib/sale";
 
 // Prints a receipt in its own window, sized for 58 or 80 mm receipt paper.
 // The browser's print window opens; with Chrome's --kiosk-printing it goes
@@ -21,7 +21,8 @@ export interface ReceiptContext {
   settings: SalesSettings;
 }
 
-export function receiptHtml(sale: Sale, ctx: ReceiptContext): string {
+// `title` replaces "Receipt #n" (a return slip uses its own).
+export function receiptHtml(sale: Sale, ctx: ReceiptContext, title?: string): string {
   const { t, money, quantity } = ctx;
   const r = t.receipt;
   const rate = `${sale.taxRateBp / 100}%`;
@@ -61,7 +62,7 @@ export function receiptHtml(sale: Sale, ctx: ReceiptContext): string {
   return `<!doctype html><html dir="${ctx.dir}"><head><meta charset="utf-8"><title>${esc(r.receipt)} #${sale.number}</title><style>${css}</style></head><body>
     <div class="center"><div class="shop">${esc(shop)}</div>${ctx.settings.receipt.header ? `<div class="pre sub">${esc(ctx.settings.receipt.header)}</div>` : ""}</div>
     <div class="rule"></div>
-    ${row(`${r.receipt} #${sale.number}`, ctx.dateTime(sale.at), "sub")}
+    ${row(title ?? `${r.receipt} #${sale.number}`, ctx.dateTime(sale.at), "sub")}
     ${sale.staffName ? row(r.cashier, sale.staffName, "sub") : ""}
     ${sale.status === "voided" ? `<div class="void">${esc(r.voided)}</div>` : ""}
     <div class="rule"></div>${lines}<div class="rule"></div>${totals}<div class="rule"></div>${payments}
@@ -70,14 +71,41 @@ export function receiptHtml(sale: Sale, ctx: ReceiptContext): string {
   </body></html>`;
 }
 
-export function printReceipt(sale: Sale, ctx: ReceiptContext): void {
+function printHtml(html: string): void {
   const win = window.open("", "_blank", "width=420,height=640");
   if (!win) return;
-  win.document.write(receiptHtml(sale, ctx));
+  win.document.write(html);
   win.document.close();
   win.focus();
   win.setTimeout(() => {
     win.print();
     win.close();
   }, 200);
+}
+
+export function printReceipt(sale: Sale, ctx: ReceiptContext): void {
+  printHtml(receiptHtml(sale, ctx));
+}
+
+// A slip for a return: what came back and what was refunded.
+export function printReturnSlip(sale: Sale, ret: SaleReturn, ctx: ReceiptContext): void {
+  const byLine = new Map(sale.lines.map((l) => [l.id, l]));
+  const slip: Sale = {
+    ...sale,
+    status: "done",
+    lines: ret.lines.map((rl) => {
+      const l = byLine.get(rl.saleLineId)!;
+      return { ...l, qtyMilli: rl.qtyMilli, totalCents: rl.refundCents, discountCents: 0, unitPriceCents: Math.round((rl.refundCents * 1000) / rl.qtyMilli) };
+    }),
+    subtotalCents: ret.refundCents,
+    discountCents: 0,
+    taxCents: 0,
+    totalCents: ret.refundCents,
+    payments: [{ method: ret.method, cents: ret.refundCents }],
+    changeCents: 0,
+    note: ret.note,
+    at: ret.at,
+    staffName: ret.staffName,
+  };
+  printHtml(receiptHtml(slip, ctx, ctx.t.returns.slip(sale.number)));
 }

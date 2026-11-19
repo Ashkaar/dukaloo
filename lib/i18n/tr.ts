@@ -65,6 +65,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      returns: {
+        title: "İadeler",
+        text: "Geçmiş bir satıştan ürünleri tamamen veya kısmen iade alın. İade tutarı ürünün ödenen paydaki karşılığıdır ve sayılan ürünler stoğa döner.",
+      },
       till: {
         title: "Kasa ve satışlar",
         text: "Kasada barkod okuyucuyla veya ürünlere dokunarak satış yapın; nakit, kart, havale veya karışık ödeme alın ve fiş yazdırın. Her satışı gün gün görün, yeniden yazdırın veya iptal edin. Vergi ve stoksuz satış Ayarlar’da birer seçenektir.",
@@ -425,6 +429,27 @@ const tr: Messages = {
     saved: "Stok güncellendi.",
     trackStock: "Stok say",
     trackStockNote: "Hizmetler ve saymadığınız şeyler için kapatın.",
+  },
+
+  returns: {
+    button: "Ürün iade al",
+    title: (n: number) => `#${n} numaralı satıştan iade`,
+    intro: "Müşterinin geri verdiğini seçin. İade tutarı ödediğinden payına düşendir.",
+    canReturn: (q: string) => `En fazla ${q} iade edilebilir`,
+    qty: "İade miktarı",
+    refundBy: "İade yöntemi",
+    refund: "İade tutarı",
+    reason: "Neden (isteğe bağlı)",
+    confirm: "İade al ve öde",
+    done: (amount: string) => `İade alındı. ${amount} geri ödendi.`,
+    refundsToday: (amount: string) => `${amount} iade sonrası`,
+    returned: "İade",
+    returnedOn: (date: string) => `İade ${date}`,
+    printSlip: "İade fişini yazdır",
+    slip: (n: number) => `#${n} iadesi`,
+    cantVoid: "Bu satışta iade var, iptal edilemez. Bunun yerine kalanı iade alın.",
+    saleVoided: "Bu satış iptal edildi.",
+    tooMany: "Bu, iade edilebilecek miktardan fazla.",
   },
 
   errors: {

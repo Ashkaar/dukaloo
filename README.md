@@ -21,7 +21,8 @@ Turkish, in light and dark mode.
 | Dashboard, Settings (theme, language, shop details from Ariloo) | Done |
 | Products with variants (size, colour…), categories, barcodes, label printing | Done |
 | Till: scanner, cart, discounts, mixed payments, tax, receipts; sales by day with reprint and void | Done |
-| Returns, camera scanning, customers on the till | Next |
+| Returns and refunds | Done |
+| Camera scanning, customers on the till | Next |
 | Stock levels and quick adjustments | Done |
 | Purchases, suppliers, stock counts, low-stock alerts | Planned |
 | Customers, expenses, invoices | Planned |
@@ -174,6 +175,14 @@ Set these in the Vercel project (Production). Never commit them.
 - **Sales** lists each day's sales (in the shop's time zone) with totals by
   payment method; any sale can be reprinted, and the owner can void one
   (it stays in the records, and its items go back into stock).
+- **Returns** (owner, or the owner password entered on the device): from a
+  sale in Sales, give back some or all of its items. The refund is each
+  item's share of what the customer paid (`refundFor` in `lib/sale.ts`), so
+  sale discounts and added tax are refunded in proportion; returning the
+  last of a line refunds exactly what is left of it. The refund is paid by
+  cash, card or transfer and subtracted from that day's takings; counted
+  items go back into stock; a return slip can be printed. A sale with
+  returns can't be voided (return the rest instead).
 - **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
   sale, void, and later purchase and return); the level is their sum.
   Products can be set not to count stock (services). The product editor

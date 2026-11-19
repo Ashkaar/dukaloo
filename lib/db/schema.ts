@@ -198,3 +198,33 @@ export const salePayments = sqliteTable(
   },
   (t) => [index("sale_payments_sale").on(t.saleId)],
 );
+
+// ---- Returns --------------------------------------------------------------
+
+export const saleReturns = sqliteTable(
+  "sale_returns",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    saleId: integer("sale_id").notNull(),
+    clientId: text("client_id").notNull(),
+    at: integer("at").notNull(),
+    staffName: text("staff_name").notNull().default(""),
+    refundCents: integer("refund_cents").notNull(),
+    method: text("method").notNull(),
+    note: text("note").notNull().default(""),
+  },
+  (t) => [uniqueIndex("sale_returns_client_id").on(t.clientId), index("sale_returns_sale").on(t.saleId), index("sale_returns_at").on(t.at)],
+);
+
+export const saleReturnLines = sqliteTable(
+  "sale_return_lines",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    returnId: integer("return_id").notNull(),
+    saleLineId: integer("sale_line_id").notNull(),
+    variantId: integer("variant_id").notNull(),
+    qtyMilli: integer("qty_milli").notNull(),
+    refundCents: integer("refund_cents").notNull(),
+  },
+  (t) => [index("sale_return_lines_return").on(t.returnId), index("sale_return_lines_line").on(t.saleLineId)],
+);
