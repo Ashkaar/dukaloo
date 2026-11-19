@@ -168,6 +168,7 @@ export const sales = sqliteTable(
     // Added later (ADDED_COLUMNS).
     customerId: integer("customer_id"),
     customerName: text("customer_name").notNull().default(""),
+    offline: integer("offline").notNull().default(0),
   },
   (t) => [uniqueIndex("sales_client_id").on(t.clientId), uniqueIndex("sales_number").on(t.number), index("sales_at").on(t.at)],
 );

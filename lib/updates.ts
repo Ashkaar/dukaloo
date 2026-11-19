@@ -14,6 +14,7 @@ export interface Update {
 }
 
 export const UPDATES: Update[] = [
+  { id: "offline", at: "2026-11-20T01:00:00Z" },
   { id: "invoices", at: "2026-11-20T00:00:00Z" },
   { id: "reports", at: "2026-11-19T23:00:00Z" },
   { id: "expenses", at: "2026-11-19T22:00:00Z" },

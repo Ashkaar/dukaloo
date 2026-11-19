@@ -74,6 +74,10 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      offline: {
+        title: "Works offline",
+        text: "Install Dukaloo on a till, phone or tablet. When the connection drops, keep selling: sales and expenses are kept on the device and sent when it’s back.",
+      },
       invoices: {
         title: "Invoices",
         text: "Print any sale as an A4 invoice with your shop’s details and the customer’s name, phone and address.",
@@ -665,6 +669,21 @@ const en = {
     amount: "Amount",
     paid: "Paid",
     refunded: "Refunded",
+  },
+
+  offline: {
+    synced: (n: number) => (n === 1 ? "1 offline record sent." : `${n} offline records sent.`),
+    waiting: (n: number) => `${n} waiting`,
+    title: "Waiting to send",
+    introOnline: "These were recorded without a connection. They are being sent now.",
+    introOffline: "You’re offline. Sales and expenses are kept on this device and sent when the connection is back.",
+    nothing: "Nothing waiting.",
+    kinds: { sale: "Sale", expense: "Expense" },
+    discard: "Remove",
+    sendNow: "Send now",
+    badge: "Offline",
+    savedOffline: "Saved on this device. It will be sent when the connection is back.",
+    receiptTitle: "Offline sale",
   },
 
   errors: {

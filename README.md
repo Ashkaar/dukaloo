@@ -29,7 +29,7 @@ Turkish, in light and dark mode.
 | Stock counts, low-stock alerts | Planned |
 | Expenses | Done |
 | A4 invoices | Done |
-| Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
+| Offline: installable app, saved screens, outbox for sales and expenses | Done |
 | Reports and backups | Done |
 
 ## Stack
@@ -233,6 +233,30 @@ Set these in the Vercel project (Production). Never commit them.
   shop's data. The server sends it a table and 2,000 rows at a time
   (`/api/backup`) and the browser builds the file, so no response gets too
   big. Sign-in secrets and staff password hashes are left out.
+
+## Offline
+
+- **Installable**: `/<shop>/manifest.webmanifest` carries the shop's name and
+  opens at its till; icons are in `public/`.
+- **Service worker** (`public/sw.js`, registered by
+  `components/offline-sync.tsx`): page loads are network first, else the
+  copy saved on the device, else `public/offline.html`; app files
+  (`/_next/static`) are cache first; data reads (`GET /api/…`) are network
+  first, else the last copy. While online, every screen the login can open
+  is saved, with the app files it needs, so it opens offline even if it was
+  never visited. Signing out tells the worker to forget saved screens and
+  data, so the next person on a shared till can't see them. Bump `VERSION`
+  in `sw.js` to drop everything an older worker saved.
+- **Outbox** (`lib/outbox.ts`, IndexedDB via Dexie, per shop): a sale or
+  expense made without a connection is kept on the device with its
+  `clientId` and sent in order when the connection is back (on reconnect,
+  every 30 seconds and when the app opens). The header shows how many are
+  waiting; anything the server refuses is listed with its reason.
+- **Offline sales** are sent with `offline: true`: the customer has paid and
+  left, so the server still prices them from the database but records them
+  even if a price changed or stock shows zero since, keeps the payments as
+  taken, and marks them "Offline" in Sales. The receipt printed offline says
+  "Offline sale" (the number comes when it is sent).
 
 ## Conventions
 

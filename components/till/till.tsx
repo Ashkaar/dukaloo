@@ -20,7 +20,7 @@ import { Sheet, SheetContent, SheetTitle } from "../ui/sheet";
 import { useScanner } from "../use-scanner";
 import { CameraScannerButton } from "../camera-scanner";
 import { CustomerPicker, type PickedCustomer } from "./customer-picker";
-import { PayDialog } from "./pay-dialog";
+import { PayDialog, type NewSaleBody } from "./pay-dialog";
 import { ReceiptDialog } from "./receipt-dialog";
 
 export interface CartLine {
@@ -30,6 +30,8 @@ export interface CartLine {
 }
 
 const ALL = 0;
+// The time of an offline sale (outside the component: only called on payment).
+const now = () => Date.now();
 
 export function Till({ initialItems, initialSettings, categories }: { initialItems: TillItem[]; initialSettings: SalesSettings; categories: Category[] }) {
   const { t, money, quantity } = useI18n();
@@ -142,6 +144,51 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
     setPaying(false);
     setCartOpen(false);
     setDone(sale);
+  };
+
+  // A sale kept on this device while offline: a receipt from the till's own
+  // figures (marked as offline, without a number until it is sent).
+  const finishedOffline = (body: NewSaleBody) => {
+    const paid = body.payments.reduce((s, p) => s + p.cents, 0);
+    const sale: Sale = {
+      id: 0,
+      number: 0,
+      at: now(),
+      staffName: "",
+      customerId: customer?.id ?? null,
+      customerName: customer?.name ?? "",
+      customerPhone: "",
+      customerAddress: "",
+      offline: true,
+      status: "done",
+      subtotalCents: totals.subtotalCents,
+      discountCents: totals.discountCents,
+      taxCents: totals.taxCents,
+      taxName: settings.tax.enabled ? settings.tax.name : "",
+      taxRateBp: settings.tax.enabled ? settings.tax.rateBp : 0,
+      taxInclusive: settings.tax.inclusive,
+      totalCents: totals.totalCents,
+      paidCents: paid,
+      changeCents: Math.max(0, paid - totals.totalCents),
+      note: body.note,
+      lines: priced.map(({ line, item }, i) => ({
+        id: 0,
+        variantId: line.variantId,
+        name: item?.name ?? "",
+        variantLabel: item?.variantLabel ?? "",
+        unit: item?.unit ?? "piece",
+        qtyMilli: line.qtyMilli,
+        unitPriceCents: item?.priceCents ?? 0,
+        discountCents: totals.lines[i].discountCents,
+        totalCents: totals.lines[i].netCents,
+        returnedMilli: 0,
+      })),
+      payments: body.payments,
+      returns: [],
+      refundedCents: 0,
+    };
+    toast.message(t.offline.savedOffline);
+    finished(sale);
   };
 
   const failed = (err: unknown) => {
@@ -391,7 +438,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
           }}
         />
       )}
-      {paying && <PayDialog cart={cart} discount={discount} customerId={customer?.id ?? null} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} />}
+      {paying && <PayDialog cart={cart} discount={discount} customerId={customer?.id ?? null} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} onOffline={finishedOffline} />}
       {done && <ReceiptDialog sale={done} settings={settings} onClose={() => setDone(null)} />}
     </div>
   );

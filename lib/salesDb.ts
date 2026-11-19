@@ -100,7 +100,7 @@ export async function createSale(input: NewSale, settings: SalesSettings, decima
     if (!v || Number(v.live) !== 1) return { ok: false, reason: "unavailable", name: v?.name ?? "" };
   }
 
-  if (!settings.allowNegativeStock) {
+  if (!settings.allowNegativeStock && !input.offline) {
     const levels = await stockLevels(ids);
     const wanted = new Map<number, number>();
     for (const l of input.lines) wanted.set(l.variantId, (wanted.get(l.variantId) ?? 0) + l.qtyMilli);
@@ -119,10 +119,17 @@ export async function createSale(input: NewSale, settings: SalesSettings, decima
     settings.tax,
     decimals,
   );
-  if (totals.totalCents !== input.expectedTotalCents) return { ok: false, reason: "changed", totalCents: totals.totalCents };
   const payments = input.payments.filter((p) => p.cents > 0);
-  const settled = settle(totals.totalCents, payments);
-  if (!settled) return { ok: false, reason: "payment" };
+  let settled = settle(totals.totalCents, payments);
+  if (input.offline) {
+    // What was really paid at the till stands; change only from cash.
+    const paid = payments.reduce((sum, p) => sum + p.cents, 0);
+    const cash = payments.filter((p) => p.method === "cash").reduce((sum, p) => sum + p.cents, 0);
+    settled ??= { paidCents: paid, changeCents: Math.min(cash, Math.max(0, paid - totals.totalCents)) };
+  } else {
+    if (totals.totalCents !== input.expectedTotalCents) return { ok: false, reason: "changed", totalCents: totals.totalCents };
+    if (!settled) return { ok: false, reason: "payment" };
+  }
 
   const at = Date.now();
   try {
@@ -142,6 +149,7 @@ export async function createSale(input: NewSale, settings: SalesSettings, decima
           staffName: staff.name,
           customerId: input.customerId,
           customerName,
+          offline: input.offline ? 1 : 0,
           subtotalCents: totals.subtotalCents,
           discountCents: totals.discountCents,
           taxCents: totals.taxCents,
@@ -214,6 +222,7 @@ export async function getSale(id: number): Promise<Sale | null> {
     customerName: s.customerName,
     customerPhone: who?.phone ?? "",
     customerAddress: who?.address ?? "",
+    offline: s.offline === 1,
     status: s.status === "voided" ? "voided" : "done",
     subtotalCents: s.subtotalCents,
     discountCents: s.discountCents,
@@ -267,6 +276,7 @@ export async function listSales(
       status: sales.status,
       totalCents: sales.totalCents,
       changeCents: sales.changeCents,
+      offline: sales.offline,
       itemCount: sql<number>`(SELECT COUNT(*) FROM sale_lines l WHERE l.sale_id = ${sales.id})`,
     })
     .from(sales)
@@ -317,6 +327,7 @@ export async function listSales(
       itemCount: Number(r.itemCount),
       methods: methods.get(r.id) ?? [],
       refundedCents: refundedBySale.get(r.id) ?? 0,
+      offline: r.offline === 1,
     })),
     totals: { count: live.length, totalCents: live.reduce((s, r) => s + r.totalCents, 0) - refundCents, refundCents, byMethod },
   };

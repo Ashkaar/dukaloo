@@ -3,6 +3,7 @@
 import { BanknoteIcon, CreditCardIcon, PlusIcon, SmartphoneIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { sendJson } from "@/lib/clientApi";
+import { enqueue, isNetworkError } from "@/lib/outbox";
 import { PAYMENT_METHODS, settle, type PaymentMethod, type Sale, type SaleDiscount } from "@/lib/sale";
 import { cn } from "@/lib/utils";
 import { useI18n } from "../i18n-provider";
@@ -13,6 +14,16 @@ import { Input } from "../ui/input";
 import type { CartLine } from "./till";
 
 const ICONS: Record<PaymentMethod, typeof BanknoteIcon> = { cash: BanknoteIcon, card: CreditCardIcon, transfer: SmartphoneIcon };
+
+export interface NewSaleBody {
+  clientId: string;
+  lines: CartLine[];
+  discount: SaleDiscount | null;
+  payments: { method: PaymentMethod; cents: number }[];
+  note: string;
+  customerId: number | null;
+  expectedTotalCents: number;
+}
 
 interface Row {
   key: number;
@@ -40,6 +51,7 @@ export function PayDialog({
   onClose,
   onDone,
   onError,
+  onOffline,
 }: {
   cart: CartLine[];
   discount: SaleDiscount | null;
@@ -48,6 +60,8 @@ export function PayDialog({
   onClose: () => void;
   onDone: (sale: Sale) => void;
   onError: (err: unknown) => void;
+  // The connection is down: the sale was kept on this device to send later.
+  onOffline: (sale: NewSaleBody) => void;
 }) {
   const { t, money } = useI18n();
   // Made once for this payment, so a retry never records the sale twice.
@@ -77,18 +91,26 @@ export function PayDialog({
   const complete = async () => {
     if (!outcome) return;
     setBusy(true);
+    const body: NewSaleBody = {
+      clientId,
+      lines: cart,
+      discount,
+      payments: payments.filter((p) => p.cents > 0),
+      note: note.trim(),
+      customerId,
+      expectedTotalCents: totalCents,
+    };
     try {
-      const { sale } = await sendJson<{ sale: Sale }>("/api/sales", "POST", {
-        clientId,
-        lines: cart,
-        discount,
-        payments: payments.filter((p) => p.cents > 0),
-        note: note.trim(),
-        customerId,
-        expectedTotalCents: totalCents,
-      });
+      if (!navigator.onLine) throw new TypeError("offline");
+      const { sale } = await sendJson<{ sale: Sale }>("/api/sales", "POST", body);
       onDone(sale);
     } catch (err) {
+      if (isNetworkError(err)) {
+        // Keep it on this device; it goes to the server when the connection is back.
+        await enqueue("sale", "/api/sales", { ...body, offline: true });
+        onOffline(body);
+        return;
+      }
       setBusy(false);
       onError(err);
     }

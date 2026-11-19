@@ -7,7 +7,7 @@ import type { Section, Viewer } from "@/lib/sections";
 import { cn } from "@/lib/utils";
 import { useI18n } from "./i18n-provider";
 import { isActive, navItems } from "./nav";
-import { OnlineStatus } from "./online-status";
+import { OfflineSync, OutboxStatus } from "./offline-sync";
 import { useAppPathname, useShop } from "./shop-provider";
 import { Sheet, SheetContent, SheetTitle } from "./ui/sheet";
 import { UpdatesBell } from "./updates-bell";
@@ -46,12 +46,12 @@ export function AppShell({ viewer, children }: { viewer: Viewer; children: React
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/90 px-4 backdrop-blur md:hidden">
           <ShopMark className="min-w-0 flex-1" compact />
-          <OnlineStatus />
+          <OutboxStatus />
           <UpdatesBell />
           <UserMenu viewer={viewer} compact />
         </header>
         <div className="no-print hidden h-12 items-center justify-end gap-3 px-6 md:flex">
-          <OnlineStatus />
+          <OutboxStatus />
         </div>
         <main id="content" className="flex-1 pb-24 md:pb-10">
           {children}
@@ -59,6 +59,7 @@ export function AppShell({ viewer, children }: { viewer: Viewer; children: React
       </div>
 
       <BottomBar sections={viewer.sections} />
+      <OfflineSync sections={viewer.sections} />
     </div>
   );
 }

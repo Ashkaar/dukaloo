@@ -4,6 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TagsIcon, Trash2Icon, Wall
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { errorMessage, getJson, sendJson } from "@/lib/clientApi";
+import { enqueue, isNetworkError } from "@/lib/outbox";
 import type { Expense, ExpenseType } from "@/lib/expenses";
 import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/sale";
 import { cn } from "@/lib/utils";
@@ -186,10 +187,19 @@ function ExpenseDialog({ today, types, onClose, onSaved }: { today: string; type
     if (!amount) return setError(t.expenses.amountNeeded);
     setBusy(true);
     setError(null);
+    const body = { clientId, day, typeId, amountCents: amount, method, note: note.trim() };
     try {
-      const { expense } = await sendJson<{ expense: Expense }>("/api/expenses", "POST", { clientId, day, typeId, amountCents: amount, method, note: note.trim() });
+      if (!navigator.onLine) throw new TypeError("offline");
+      const { expense } = await sendJson<{ expense: Expense }>("/api/expenses", "POST", body);
       onSaved(expense);
     } catch (err) {
+      if (isNetworkError(err)) {
+        // Kept on this device and sent when the connection is back.
+        await enqueue("expense", "/api/expenses", body);
+        toast.message(t.offline.savedOffline);
+        onSaved({ id: -Date.now(), day, typeId, typeName: types.find((x) => x.id === typeId)?.name ?? "", amountCents: amount, method, note: note.trim(), staffName: "", createdAt: Date.now() });
+        return;
+      }
       setError(errorMessage(err, t.common.somethingWrong));
       setBusy(false);
     }

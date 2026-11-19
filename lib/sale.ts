@@ -160,6 +160,9 @@ export const newSaleSchema = z.object({
     .min(1)
     .max(10),
   note: z.string().trim().max(200),
+  // Made while offline and sent later: the customer has paid and gone, so
+  // it is recorded even if a price changed or stock shows zero since.
+  offline: z.boolean().default(false),
   // The customer the sale is for, if any.
   customerId: z.number().int().positive().nullable().default(null),
   // The total the cashier saw; the server refuses the sale if prices changed since.
@@ -204,6 +207,8 @@ export interface Sale {
   // The customer's details now (for an invoice), "" without a customer.
   customerPhone: string;
   customerAddress: string;
+  // Recorded on the till while offline, sent later.
+  offline: boolean;
   status: "done" | "voided";
   subtotalCents: number;
   discountCents: number;
@@ -232,6 +237,7 @@ export interface SaleSummary {
   itemCount: number;
   methods: PaymentMethod[];
   refundedCents: number;
+  offline?: boolean;
 }
 
 // A sellable item as the till keeps it in memory.

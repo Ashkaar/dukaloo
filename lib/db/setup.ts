@@ -268,6 +268,8 @@ export const ADDED_COLUMNS: [string, string, string][] = [
   // The customer a sale was for (and their name then, for the records).
   ["sales", "customer_id", "INTEGER"],
   ["sales", "customer_name", "TEXT NOT NULL DEFAULT ''"],
+  // Made on the till while offline and sent later.
+  ["sales", "offline", "INTEGER NOT NULL DEFAULT 0"],
 ];
 
 async function addMissingColumns(client: Client): Promise<void> {

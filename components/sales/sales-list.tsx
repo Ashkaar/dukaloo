@@ -108,6 +108,7 @@ export function SalesList({ first, today, settings, canVoid }: { first: DayOfSal
                   #{s.number}
                   {s.status === "voided" && <Badge variant="destructive">{t.sales.voided}</Badge>}
                   {s.refundedCents > 0 && <Badge variant="accent">{t.returns.returned}</Badge>}
+                  {s.offline && <Badge variant="neutral">{t.offline.badge}</Badge>}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {[t.sales.items(s.itemCount), s.staffName || t.header.owner, s.methods.map((m) => t.till.methods[m]).join(" + ")].join(" · ")}

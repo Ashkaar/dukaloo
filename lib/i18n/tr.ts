@@ -70,6 +70,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      offline: {
+        title: "Çevrimdışı çalışır",
+        text: "Dukaloo’yu kasaya, telefona veya tablete kurun. Bağlantı kesilince satışa devam edin: satışlar ve giderler cihazda tutulur, bağlantı gelince gönderilir.",
+      },
       invoices: {
         title: "Faturalar",
         text: "Herhangi bir satışı mağaza bilgileriniz ve müşterinin adı, telefonu ve adresiyle A4 fatura olarak yazdırın.",
@@ -661,6 +665,21 @@ const tr: Messages = {
     amount: "Tutar",
     paid: "Ödenen",
     refunded: "İade edilen",
+  },
+
+  offline: {
+    synced: (n: number) => `${n} çevrimdışı kayıt gönderildi.`,
+    waiting: (n: number) => `${n} bekliyor`,
+    title: "Gönderilmeyi bekleyenler",
+    introOnline: "Bunlar bağlantı yokken kaydedildi. Şimdi gönderiliyor.",
+    introOffline: "Çevrimdışısınız. Satışlar ve giderler bu cihazda tutulur ve bağlantı gelince gönderilir.",
+    nothing: "Bekleyen bir şey yok.",
+    kinds: { sale: "Satış", expense: "Gider" },
+    discard: "Kaldır",
+    sendNow: "Şimdi gönder",
+    badge: "Çevrimdışı",
+    savedOffline: "Bu cihaza kaydedildi. Bağlantı gelince gönderilecek.",
+    receiptTitle: "Çevrimdışı satış",
   },
 
   errors: {
