@@ -191,6 +191,51 @@ export const SCHEMA: string[] = [
   )`,
   "CREATE INDEX IF NOT EXISTS customers_name ON customers (name COLLATE NOCASE)",
   "CREATE UNIQUE INDEX IF NOT EXISTS customers_phone ON customers (phone) WHERE phone <> '' AND archived_at IS NULL",
+
+  // ---- Suppliers and purchases (stock coming in) ----
+  `CREATE TABLE IF NOT EXISTS suppliers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    address TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    archived_at INTEGER
+  )`,
+  "CREATE INDEX IF NOT EXISTS suppliers_name ON suppliers (name COLLATE NOCASE)",
+  `CREATE TABLE IF NOT EXISTS purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    number INTEGER NOT NULL,
+    client_id TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    supplier_id INTEGER,
+    supplier_name TEXT NOT NULL DEFAULT '',
+    reference TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    total_cents INTEGER NOT NULL,
+    staff_name TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'received',
+    cancelled_at INTEGER,
+    cancelled_by TEXT NOT NULL DEFAULT ''
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS purchases_client_id ON purchases (client_id)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS purchases_number ON purchases (number)",
+  "CREATE INDEX IF NOT EXISTS purchases_at ON purchases (at)",
+  "CREATE INDEX IF NOT EXISTS purchases_supplier ON purchases (supplier_id)",
+  `CREATE TABLE IF NOT EXISTS purchase_lines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_id INTEGER NOT NULL,
+    variant_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    variant_label TEXT NOT NULL DEFAULT '',
+    qty_milli INTEGER NOT NULL,
+    unit_cost_cents INTEGER NOT NULL,
+    total_cents INTEGER NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS purchase_lines_purchase ON purchase_lines (purchase_id)",
+  "CREATE INDEX IF NOT EXISTS purchase_lines_variant ON purchase_lines (variant_id)",
 ];
 
 // Columns added to tables after they first shipped: [table, column, definition].

@@ -248,3 +248,61 @@ export const customers = sqliteTable(
   },
   (t) => [index("customers_name").on(sql`${t.name} COLLATE NOCASE`), uniqueIndex("customers_phone").on(t.phone).where(sql`${t.phone} <> '' AND ${t.archivedAt} IS NULL`)],
 );
+
+// ---- Suppliers and purchases ---------------------------------------------
+
+export const suppliers = sqliteTable(
+  "suppliers",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    phone: text("phone").notNull().default(""),
+    email: text("email").notNull().default(""),
+    address: text("address").notNull().default(""),
+    note: text("note").notNull().default(""),
+    createdAt: integer("created_at").notNull(),
+    archivedAt: integer("archived_at"),
+  },
+  (t) => [index("suppliers_name").on(sql`${t.name} COLLATE NOCASE`)],
+);
+
+export const purchases = sqliteTable(
+  "purchases",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    number: integer("number").notNull(),
+    clientId: text("client_id").notNull(),
+    at: integer("at").notNull(),
+    supplierId: integer("supplier_id"),
+    supplierName: text("supplier_name").notNull().default(""),
+    reference: text("reference").notNull().default(""),
+    note: text("note").notNull().default(""),
+    totalCents: integer("total_cents").notNull(),
+    staffName: text("staff_name").notNull().default(""),
+    status: text("status").notNull().default("received"),
+    cancelledAt: integer("cancelled_at"),
+    cancelledBy: text("cancelled_by").notNull().default(""),
+  },
+  (t) => [
+    uniqueIndex("purchases_client_id").on(t.clientId),
+    uniqueIndex("purchases_number").on(t.number),
+    index("purchases_at").on(t.at),
+    index("purchases_supplier").on(t.supplierId),
+  ],
+);
+
+export const purchaseLines = sqliteTable(
+  "purchase_lines",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    purchaseId: integer("purchase_id").notNull(),
+    variantId: integer("variant_id").notNull(),
+    productId: integer("product_id").notNull(),
+    name: text("name").notNull(),
+    variantLabel: text("variant_label").notNull().default(""),
+    qtyMilli: integer("qty_milli").notNull(),
+    unitCostCents: integer("unit_cost_cents").notNull(),
+    totalCents: integer("total_cents").notNull(),
+  },
+  (t) => [index("purchase_lines_purchase").on(t.purchaseId), index("purchase_lines_variant").on(t.variantId)],
+);

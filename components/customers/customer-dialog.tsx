@@ -11,21 +11,26 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 
-// Add or edit a customer. `quick` (from the till) asks only for name and phone.
+// Add or edit a customer (or, with kind="supplier", a supplier: the same
+// fields). `quick` (from the till) asks only for name and phone.
 export function CustomerDialog({
   customer,
   initialName = "",
   quick = false,
+  kind = "customer",
   onClose,
   onSaved,
 }: {
   customer: Customer | null;
   initialName?: string;
   quick?: boolean;
+  kind?: "customer" | "supplier";
   onClose: () => void;
   onSaved: (c: Customer) => void;
 }) {
   const { t } = useI18n();
+  const endpoint = kind === "supplier" ? "/api/suppliers" : "/api/customers";
+  const titles = kind === "supplier" ? { edit: t.purchases.editSupplier, add: t.purchases.newSupplier } : { edit: t.customers.editTitle, add: t.customers.newTitle };
   const digits = /^[+\d\s]{3,}$/.test(initialName);
   const [name, setName] = useState(customer?.name ?? (digits ? "" : initialName));
   const [phone, setPhone] = useState(customer?.phone ?? (digits ? initialName : ""));
@@ -41,8 +46,8 @@ export function CustomerDialog({
     setError(null);
     try {
       const body = { name: name.trim(), phone, email: email.trim(), address: address.trim(), note: note.trim() };
-      const { customer: saved } = await sendJson<{ customer: Customer }>(customer ? `/api/customers/${customer.id}` : "/api/customers", customer ? "PUT" : "POST", body);
-      onSaved(saved);
+      const res = await sendJson<{ customer?: Customer; supplier?: Customer }>(customer ? `${endpoint}/${customer.id}` : endpoint, customer ? "PUT" : "POST", body);
+      onSaved((res.customer ?? res.supplier)!);
     } catch (err) {
       setError(errorMessage(err, t.common.somethingWrong));
       setBusy(false);
@@ -53,7 +58,7 @@ export function CustomerDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent closeLabel={t.common.close}>
         <DialogHeader>
-          <DialogTitle>{customer ? t.customers.editTitle : t.customers.newTitle}</DialogTitle>
+          <DialogTitle>{customer ? titles.edit : titles.add}</DialogTitle>
           <DialogDescription className="sr-only">{t.customers.intro}</DialogDescription>
         </DialogHeader>
         <form onSubmit={save} className="space-y-4">

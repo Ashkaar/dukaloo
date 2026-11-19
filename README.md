@@ -25,7 +25,8 @@ Turkish, in light and dark mode.
 | Camera barcode scanning | Done |
 | Customers: list, history, picked at the till, on receipts | Done |
 | Stock levels and quick adjustments | Done |
-| Purchases, suppliers, stock counts, low-stock alerts | Planned |
+| Purchases and suppliers | Done |
+| Stock counts, low-stock alerts | Planned |
 | Customers, expenses, invoices | Planned |
 | Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
 | Reports, backups | Planned |
@@ -197,6 +198,11 @@ Set these in the Vercel project (Production). Never commit them.
   just a name and phone; the sale and receipt carry their name. Each
   customer's page shows their purchases, visits and total spent (less
   refunds). Deleting a customer hides them; past sales keep the name.
+- **Purchases** (Purchases section, with a Suppliers tab): scan, search or
+  pick what came in, with quantity and cost each, the supplier and their
+  invoice number. Receiving puts counted items into stock and (by default)
+  sets each item's cost price to what was paid, so profit stays right. The
+  owner can cancel a purchase entered by mistake; its stock goes back out.
 - **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
   sale, void, and later purchase and return); the level is their sum.
   Products can be set not to count stock (services). The product editor

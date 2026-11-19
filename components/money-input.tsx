@@ -63,6 +63,12 @@ export function QuantityInput({
   ...props
 }: Omit<React.ComponentProps<typeof Input>, "value" | "onChange" | "type"> & { milli: number; onChange: (milli: number | null) => void }) {
   const [textValue, setText] = useState(() => (milli ? String(milli / MILLI) : ""));
+  const [lastMilli, setLastMilli] = useState(milli);
+  // Follow changes made from outside (e.g. the same item scanned again).
+  if (milli !== lastMilli) {
+    setLastMilli(milli);
+    if (parseQuantity(textValue || "0") !== milli) setText(milli ? String(milli / MILLI) : "");
+  }
   const invalid = textValue !== "" && parseQuantity(textValue) === null;
   return (
     <Input
@@ -75,7 +81,9 @@ export function QuantityInput({
       className={cn("tabular text-end", className)}
       onChange={(e) => {
         setText(e.target.value);
-        onChange(e.target.value.trim() === "" ? 0 : parseQuantity(e.target.value));
+        const parsed = e.target.value.trim() === "" ? 0 : parseQuantity(e.target.value);
+        if (parsed !== null) setLastMilli(parsed);
+        onChange(parsed);
       }}
       {...props}
     />
