@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { DECIMAL_UNITS, type Unit } from "@/lib/catalog";
 import { errorMessage, sendJson } from "@/lib/clientApi";
 import { MILLI } from "@/lib/format";
-import { PAYMENT_METHODS, refundFor, type PaymentMethod, type Sale } from "@/lib/sale";
+import { PAYMENT_METHODS, refundFor, type Sale, type SaleMethod } from "@/lib/sale";
 import { FormError } from "../form-error";
 import { useI18n } from "../i18n-provider";
 import { QuantityInput } from "../money-input";
@@ -31,7 +31,9 @@ export function ReturnDialog({ sale, onClose, onDone }: { sale: Sale; onClose: (
   const { decimals } = useShop();
   const [clientId] = useState(newClientId);
   const [qty, setQty] = useState<Record<number, number | null>>({});
-  const [method, setMethod] = useState<PaymentMethod>(sale.payments[0]?.method ?? "cash");
+  // A sale paid on account refunds to the account by default.
+  const [method, setMethod] = useState<SaleMethod>(sale.payments.some((p) => p.method === "credit") && sale.customerId ? "credit" : (sale.payments[0]?.method ?? "cash"));
+  const methods: readonly SaleMethod[] = sale.customerId ? [...PAYMENT_METHODS, "credit"] : PAYMENT_METHODS;
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,10 +106,10 @@ export function ReturnDialog({ sale, onClose, onDone }: { sale: Sale; onClose: (
             <select
               id="refund-method"
               value={method}
-              onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+              onChange={(e) => setMethod(e.target.value as SaleMethod)}
               className="h-10 w-full cursor-pointer rounded-lg border border-input bg-card px-2 text-sm"
             >
-              {PAYMENT_METHODS.map((m) => (
+              {methods.map((m) => (
                 <option key={m} value={m}>
                   {t.till.methods[m]}
                 </option>

@@ -74,6 +74,14 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      scale: {
+        title: "Items sold by weight",
+        text: "Turn it on in Settings: scan labels printed by your shop scale (weight or price), or read a scale plugged into the till.",
+      },
+      credit: {
+        title: "Sell on account",
+        text: "Turn it on in Settings to let regular customers pay later. See what each customer owes, record their payments, and see the total owed in Reports.",
+      },
       offline: {
         title: "Works offline",
         text: "Install Dukaloo on a till, phone or tablet. When the connection drops, keep selling: sales and expenses are kept on the device and sent when it’s back.",
@@ -387,6 +395,7 @@ const en = {
       cash: "Cash",
       card: "Card",
       transfer: "Transfer",
+      credit: "On account",
     },
     method: "Payment method",
     received: "Received",
@@ -684,6 +693,45 @@ const en = {
     badge: "Offline",
     savedOffline: "Saved on this device. It will be sent when the connection is back.",
     receiptTitle: "Offline sale",
+  },
+
+  credit: {
+    needsCustomer: "Choose a customer to sell on account.",
+    off: "Selling on account is turned off in Settings.",
+    owes: (amount: string) => `Owes ${amount}`,
+    chooseCustomer: "Choose a customer to sell on account.",
+    received: "From customers",
+    receivedNote: "Repayments of account sales, included above",
+    owedTotal: "Customers owe",
+    receivedIn: (amount: string) => `${amount} repaid in this period`,
+    setting: "Sell on account",
+    settingNote: "Let regular customers take goods now and pay later. The sale needs a customer, and their balance shows on their page.",
+    notInPlan: "Not in your plan. Upgrade on Ariloo to sell on account.",
+    account: "Account",
+    owedNow: "Owed now",
+    inCredit: (amount: string) => `${amount} in credit`,
+    nothingOwed: "Nothing owed",
+    recordPayment: "Record payment",
+    payments: "Payments",
+    paymentSaved: "Payment recorded.",
+    deletePayment: "Delete this payment?",
+  },
+
+  scale: {
+    setting: "Items sold by weight",
+    settingNote: "Read labels printed by a shop scale, and a scale on the till’s USB or serial port.",
+    notInPlan: "Not in your plan. Upgrade on Ariloo to use scales.",
+    weightPrefix: "Weight labels start with",
+    pricePrefix: "Price labels start with",
+    none: "Not used",
+    speed: "Scale speed (baud)",
+    labelHint: "Scale labels are 13 digits: the start above, the item’s 5-digit code (give the item that SKU or barcode, e.g. 00123), then the weight in grams or the price, then a check digit.",
+    test: "Test the scale",
+    testResult: (weight: string) => `The scale reads ${weight}.`,
+    read: "Read scale",
+    reading: "Reading…",
+    noPort: "No scale chosen. Connect it and try again (Chrome or Edge on a computer).",
+    noReading: "No weight from the scale. Check it is on, steady and set to the speed in Settings.",
   },
 
   errors: {

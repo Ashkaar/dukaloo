@@ -336,3 +336,21 @@ export const expenses = sqliteTable(
   },
   (t) => [uniqueIndex("expenses_client_id").on(t.clientId), index("expenses_day").on(t.day)],
 );
+
+// ---- Customer repayments ---------------------------------------------------
+
+export const customerPayments = sqliteTable(
+  "customer_payments",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    customerId: integer("customer_id").notNull(),
+    clientId: text("client_id").notNull(),
+    at: integer("at").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    method: text("method").notNull(),
+    note: text("note").notNull().default(""),
+    staffName: text("staff_name").notNull().default(""),
+    deletedAt: integer("deleted_at"),
+  },
+  (t) => [uniqueIndex("customer_payments_client_id").on(t.clientId), index("customer_payments_customer").on(t.customerId), index("customer_payments_at").on(t.at)],
+);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { customerSchema, normalisePhone } from "@/lib/customers";
+import { customerSchema, newCustomerPaymentSchema, normalisePhone } from "@/lib/customers";
 
 describe("customers", () => {
   it("keep phone numbers as digits", () => {
@@ -13,5 +13,15 @@ describe("customers", () => {
     expect(customerSchema.safeParse({ ...ok, name: " " }).success).toBe(false);
     expect(customerSchema.safeParse({ ...ok, phone: "12" }).success).toBe(false);
     expect(customerSchema.safeParse({ ...ok, email: "not-an-email" }).success).toBe(false);
+  });
+});
+
+describe("customer payments", () => {
+  it("take real money, never another credit", () => {
+    const ok = { clientId: "abcdef12", amountCents: 500, method: "cash", note: "" };
+    expect(newCustomerPaymentSchema.safeParse(ok).success).toBe(true);
+    expect(newCustomerPaymentSchema.safeParse({ ...ok, method: "credit" }).success).toBe(false);
+    expect(newCustomerPaymentSchema.safeParse({ ...ok, amountCents: 0 }).success).toBe(false);
+    expect(newCustomerPaymentSchema.safeParse({ ...ok, amountCents: 1.5 }).success).toBe(false);
   });
 });

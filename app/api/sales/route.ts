@@ -5,6 +5,7 @@ import { dayOf, dayStart, formatMoney, nextDay } from "@/lib/format";
 import { getMessages } from "@/lib/i18n/server";
 import { newSaleSchema } from "@/lib/sale";
 import { createSale, listSales } from "@/lib/salesDb";
+import { shopFeatures } from "@/lib/features";
 import { getSalesSettings, requestTimeZone } from "@/lib/settingsDb";
 import { shopProfile } from "@/lib/tenant";
 
@@ -30,11 +31,14 @@ export async function POST(request: NextRequest) {
   if (error) return error;
   const t = (await getMessages()).till;
   try {
-    const [settings, profile] = await Promise.all([getSalesSettings(), shopProfile()]);
-    const result = await createSale(data, settings, profile.decimals, { id: viewer.staffId, name: viewer.name });
+    const [settings, profile, features] = await Promise.all([getSalesSettings(), shopProfile(), shopFeatures()]);
+    const creditAllowed = settings.creditSales && features.includes("credit");
+    const result = await createSale(data, settings, profile.decimals, { id: viewer.staffId, name: viewer.name }, creditAllowed);
     if (result.ok) return ok({ sale: result.sale }, 201);
     if (result.reason === "unavailable") return badRequest(t.unavailable(result.name));
     if (result.reason === "customer") return badRequest((await getMessages()).customers.gone);
+    if (result.reason === "credit-customer") return badRequest((await getMessages()).credit.needsCustomer);
+    if (result.reason === "credit-off") return badRequest((await getMessages()).credit.off);
     if (result.reason === "stock") return NextResponse.json({ error: t.outOfStock(result.name) }, { status: 409 });
     if (result.reason === "changed") {
       return NextResponse.json({ error: t.pricesChanged(formatMoney(result.totalCents, profile)) }, { status: 409 });

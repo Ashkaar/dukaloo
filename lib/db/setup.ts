@@ -259,6 +259,22 @@ export const SCHEMA: string[] = [
   )`,
   "CREATE UNIQUE INDEX IF NOT EXISTS expenses_client_id ON expenses (client_id)",
   "CREATE INDEX IF NOT EXISTS expenses_day ON expenses (day)",
+
+  // ---- Customer repayments (credit sales paid off) ----
+  `CREATE TABLE IF NOT EXISTS customer_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER NOT NULL,
+    client_id TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    amount_cents INTEGER NOT NULL,
+    method TEXT NOT NULL,
+    note TEXT NOT NULL DEFAULT '',
+    staff_name TEXT NOT NULL DEFAULT '',
+    deleted_at INTEGER
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS customer_payments_client_id ON customer_payments (client_id)",
+  "CREATE INDEX IF NOT EXISTS customer_payments_customer ON customer_payments (customer_id)",
+  "CREATE INDEX IF NOT EXISTS customer_payments_at ON customer_payments (at)",
 ];
 
 // Columns added to tables after they first shipped: [table, column, definition].

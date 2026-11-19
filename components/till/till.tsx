@@ -1,13 +1,16 @@
 "use client";
 
-import { BadgePercentIcon, ContactRoundIcon, MinusIcon, PackageIcon, PlusIcon, ScanBarcodeIcon, SearchIcon, ShoppingCartIcon, Trash2Icon, XIcon } from "lucide-react";
+import { BadgePercentIcon, ScaleIcon, ContactRoundIcon, MinusIcon, PackageIcon, PlusIcon, ScanBarcodeIcon, SearchIcon, ShoppingCartIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DECIMAL_UNITS, type Category, type Unit } from "@/lib/catalog";
+import type { Feature } from "@/lib/plans";
 import { ApiError, errorMessage, getJson } from "@/lib/clientApi";
 import { MILLI } from "@/lib/format";
 import { computeTotals, type Sale, type SaleDiscount, type SalesSettings, type TillItem } from "@/lib/sale";
+import { itemCodeKeys, labelQuantity, parseScaleLabel } from "@/lib/scale";
 import { cn } from "@/lib/utils";
+import { readScale, ScaleError, scaleSupported } from "./scale-reader";
 import { useI18n } from "../i18n-provider";
 import { MoneyInput, QuantityInput } from "../money-input";
 import { useShop } from "../shop-provider";
@@ -33,7 +36,19 @@ const ALL = 0;
 // The time of an offline sale (outside the component: only called on payment).
 const now = () => Date.now();
 
-export function Till({ initialItems, initialSettings, categories }: { initialItems: TillItem[]; initialSettings: SalesSettings; categories: Category[] }) {
+export function Till({
+  initialItems,
+  initialSettings,
+  categories,
+  features = [],
+  customersEnabled = true,
+}: {
+  initialItems: TillItem[];
+  initialSettings: SalesSettings;
+  categories: Category[];
+  features?: readonly Feature[];
+  customersEnabled?: boolean;
+}) {
   const { t, money, quantity } = useI18n();
   const { decimals } = useShop();
   const [items, setItems] = useState(initialItems);
@@ -80,16 +95,26 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
 
   const inCart = (id: number) => cart.filter((l) => l.variantId === id).reduce((s, l) => s + l.qtyMilli, 0);
 
-  const add = (item: TillItem, qtyMilli = MILLI) => {
+  // False if the stock rules refuse it.
+  const stockOk = (item: TillItem, qtyMilli: number): boolean => {
     const after = item.stockMilli - inCart(item.variantId) - qtyMilli;
     const label = item.variantLabel ? `${item.name} (${item.variantLabel})` : item.name;
     if (item.trackStock && after < 0) {
       if (!settings.allowNegativeStock) {
         toast.error(t.till.outOfStock(label));
-        return;
+        return false;
       }
       toast.warning(t.till.noStockLeft(label));
     }
+    return true;
+  };
+
+  const addLine = (item: TillItem, qtyMilli: number) => {
+    if (stockOk(item, qtyMilli)) setCart((list) => [...list, { variantId: item.variantId, qtyMilli, discountCents: 0 }]);
+  };
+
+  const add = (item: TillItem, qtyMilli = MILLI) => {
+    if (!stockOk(item, qtyMilli)) return;
     setCart((list) => {
       const i = list.findIndex((l) => l.variantId === item.variantId && l.discountCents === 0);
       if (i >= 0) return list.map((l, j) => (j === i ? { ...l, qtyMilli: l.qtyMilli + qtyMilli } : l));
@@ -97,10 +122,25 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
     });
   };
 
+  // Scale labels and the till's scale, if the shop has them on.
+  const scale = features.includes("scale") && settings.scale.enabled ? settings.scale : null;
+
   const addByCode = (code: string): boolean => {
-    const item = byCode.get(code.trim().toLowerCase());
-    if (!item) return false;
-    add(item);
+    const clean = code.trim().toLowerCase();
+    const item = byCode.get(clean);
+    if (item) {
+      add(item);
+      return true;
+    }
+    const label = scale ? parseScaleLabel(clean, scale, decimals) : null;
+    if (!label) return false;
+    const match = itemCodeKeys(label.itemCode)
+      .map((k) => byCode.get(k))
+      .find(Boolean);
+    const qty = match ? labelQuantity(label, match.unit, match.priceCents) : null;
+    if (!match || !qty) return false;
+    // Each label is its own line: two bags of apples weigh differently.
+    addLine(match, qty);
     return true;
   };
 
@@ -256,6 +296,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
         )}
       </div>
       <div className="space-y-1.5 border-t border-border px-4 py-3 text-sm">
+        {customersEnabled && (
         <button
           type="button"
           onClick={() => setPicking(true)}
@@ -263,7 +304,11 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
         >
           <ContactRoundIcon className="size-4 text-muted-foreground" />
           <span className={cn("min-w-0 flex-1 truncate", customer ? "font-semibold" : "text-muted-foreground")}>{customer ? customer.name : t.customers.addToSale}</span>
+          {customer && customer.balanceCents > 0 && (
+            <span className="tabular shrink-0 text-xs font-semibold text-accent-700 dark:text-accent-400">{t.credit.owes(money(customer.balanceCents))}</span>
+          )}
         </button>
+        )}
         <Row label={t.till.subtotal} value={money(totals.subtotalCents)} />
         {totals.discountCents > 0 && <Row label={t.till.discount} value={`-${money(totals.discountCents)}`} accent />}
         {settings.tax.enabled && totals.taxCents > 0 && !settings.tax.inclusive && <Row label={`${settings.tax.name} ${rate}`} value={money(totals.taxCents)} />}
@@ -407,6 +452,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
         <LineDialog
           line={cart[editing]}
           item={byId.get(cart[editing].variantId)}
+          scaleBaud={scale && scaleSupported() ? scale.baudRate : null}
           onClose={() => setEditing(null)}
           onSave={(line) => {
             setCart((list) => list.map((l, j) => (j === editing ? line : l)));
@@ -438,7 +484,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
           }}
         />
       )}
-      {paying && <PayDialog cart={cart} discount={discount} customerId={customer?.id ?? null} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} onOffline={finishedOffline} />}
+      {paying && <PayDialog cart={cart} discount={discount} customerId={customer?.id ?? null} creditEnabled={settings.creditSales && features.includes("credit")} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} onOffline={finishedOffline} />}
       {done && <ReceiptDialog sale={done} settings={settings} onClose={() => setDone(null)} />}
     </div>
   );
@@ -456,19 +502,40 @@ function Row({ label, value, accent = false }: { label: string; value: string; a
 function LineDialog({
   line,
   item,
+  scaleBaud,
   onClose,
   onSave,
   onRemove,
 }: {
   line: CartLine;
   item: TillItem | undefined;
+  // A scale can be read on this till (its speed), or null.
+  scaleBaud: number | null;
   onClose: () => void;
   onSave: (line: CartLine) => void;
   onRemove: () => void;
 }) {
   const { t } = useI18n();
   const [qty, setQty] = useState<number | null>(line.qtyMilli);
+  // Bumped to show a reading in the quantity box.
+  const [shown, setShown] = useState(line.qtyMilli);
+  const [reading, setReading] = useState(false);
   const [disc, setDisc] = useState<number | null>(line.discountCents);
+  const weighable = item?.unit === "kg" || item?.unit === "g";
+  const weigh = async () => {
+    if (!scaleBaud) return;
+    setReading(true);
+    try {
+      const grams = await readScale(scaleBaud);
+      const milli = item?.unit === "g" ? grams * 1000 : grams;
+      setShown(milli);
+      setQty(milli);
+    } catch (err) {
+      toast.error(err instanceof ScaleError && err.reason === "no-port" ? t.scale.noPort : t.scale.noReading);
+    } finally {
+      setReading(false);
+    }
+  };
   const valid = qty !== null && qty > 0 && disc !== null;
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -480,7 +547,15 @@ function LineDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="line-qty">{t.till.qty}</Label>
-            <QuantityInput id="line-qty" milli={line.qtyMilli} onChange={setQty} className="h-12 text-lg" autoFocus />
+            <div className="flex gap-2">
+              <QuantityInput id="line-qty" milli={shown} onChange={setQty} className="h-12 flex-1 text-lg" autoFocus />
+              {scaleBaud && weighable && (
+                <Button variant="soft" className="h-12" onClick={weigh} disabled={reading}>
+                  <ScaleIcon />
+                  {reading ? t.scale.reading : t.scale.read}
+                </Button>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="line-discount">{t.till.lineDiscount}</Label>

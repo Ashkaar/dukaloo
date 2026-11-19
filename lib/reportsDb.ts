@@ -1,7 +1,8 @@
 import "server-only";
+import { totalOwed } from "./customersDb";
 import { getShopDb } from "./db";
 import { dayOf, dayStart, nextDay } from "./format";
-import type { PaymentMethod } from "./sale";
+import { emptyByMethod, type SaleMethod } from "./sale";
 
 // The owner's report for a run of days, worked out in SQL so it stays fast
 // for a whole year of sales. Voided sales are left out; returns count on the
@@ -24,7 +25,11 @@ export interface Report {
     netProfitCents: number;
     averageCents: number;
   };
-  byMethod: Record<PaymentMethod, number>;
+  byMethod: Record<SaleMethod, number>;
+  // Repayments from customers in the period (included in byMethod's money
+  // methods), and what all customers owe right now.
+  receivedCents: number;
+  owedCents: number;
   byDay: { day: string; netCents: number; count: number }[];
   topProducts: { name: string; variantLabel: string; qtyMilli: number; revenueCents: number; profitCents: number }[];
   byCategory: { name: string; revenueCents: number }[];
@@ -52,7 +57,7 @@ export async function buildReport(from: string, to: string, timeZone: string): P
   const range = [start, end];
   const q = async (sql: string, args: (string | number)[] = range) => (await client.execute({ sql, args })).rows;
 
-  const [totals, refunds, cost, returnedCost, payments, change, refundByMethod, daySales, dayRefunds, top, categories, staff, expenses, expenseTypes, stockValue, low] =
+  const [totals, refunds, cost, returnedCost, payments, change, refundByMethod, daySales, dayRefunds, top, categories, staff, expenses, expenseTypes, stockValue, low, received, owed] =
     await Promise.all([
       q(`SELECT COUNT(*) AS c, COALESCE(SUM(total_cents),0) AS gross, COALESCE(SUM(discount_cents),0) AS disc, COALESCE(SUM(tax_cents),0) AS tax
          FROM sales s WHERE ${live}`),
@@ -92,6 +97,8 @@ export async function buildReport(from: string, to: string, timeZone: string): P
          WHERE p.track_stock = 1 AND v.archived_at IS NULL AND p.archived_at IS NULL AND v.active = 1 AND p.active = 1
            AND v.low_stock_milli > 0 AND COALESCE(lv.qty, 0) <= v.low_stock_milli
          ORDER BY COALESCE(lv.qty, 0) - v.low_stock_milli LIMIT 50`, []),
+      q(`SELECT method, COALESCE(SUM(amount_cents),0) AS cents FROM customer_payments WHERE deleted_at IS NULL AND at >= ? AND at < ? GROUP BY method`),
+      totalOwed(),
     ]);
 
   const count = n(totals[0]?.c);
@@ -104,10 +111,15 @@ export async function buildReport(from: string, to: string, timeZone: string): P
   const grossProfit = revenue - costCents;
   const expenseCents = n(expenses[0]?.cents);
 
-  const byMethod: Record<PaymentMethod, number> = { cash: 0, card: 0, transfer: 0 };
-  for (const r of payments) if (String(r.method) in byMethod) byMethod[String(r.method) as PaymentMethod] += n(r.cents);
+  const byMethod: Record<SaleMethod, number> = emptyByMethod();
+  for (const r of payments) if (String(r.method) in byMethod) byMethod[String(r.method) as SaleMethod] += n(r.cents);
   byMethod.cash -= n(change[0]?.cents);
-  for (const r of refundByMethod) if (String(r.method) in byMethod) byMethod[String(r.method) as PaymentMethod] -= n(r.cents);
+  for (const r of refundByMethod) if (String(r.method) in byMethod) byMethod[String(r.method) as SaleMethod] -= n(r.cents);
+  let receivedCents = 0;
+  for (const r of received) {
+    receivedCents += n(r.cents);
+    if (String(r.method) in byMethod) byMethod[String(r.method) as SaleMethod] += n(r.cents);
+  }
 
   // Every day in the range, also the quiet ones.
   const days = new Map<string, { netCents: number; count: number }>();
@@ -142,6 +154,8 @@ export async function buildReport(from: string, to: string, timeZone: string): P
       averageCents: count ? Math.round(gross / count) : 0,
     },
     byMethod,
+    receivedCents,
+    owedCents: owed,
     byDay: [...days].map(([day, v]) => ({ day, ...v })),
     topProducts: top.map((r) => ({ name: String(r.name), variantLabel: String(r.label ?? ""), qtyMilli: n(r.qty), revenueCents: n(r.revenue), profitCents: Math.round(n(r.profit)) })),
     byCategory: categories.map((r) => ({ name: String(r.name), revenueCents: n(r.revenue) })),

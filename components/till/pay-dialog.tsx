@@ -1,10 +1,10 @@
 "use client";
 
-import { BanknoteIcon, CreditCardIcon, PlusIcon, SmartphoneIcon, XIcon } from "lucide-react";
+import { BanknoteIcon, CreditCardIcon, NotebookPenIcon, PlusIcon, SmartphoneIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { sendJson } from "@/lib/clientApi";
 import { enqueue, isNetworkError } from "@/lib/outbox";
-import { PAYMENT_METHODS, settle, type PaymentMethod, type Sale, type SaleDiscount } from "@/lib/sale";
+import { PAYMENT_METHODS, SALE_METHODS, settle, type Sale, type SaleDiscount, type SaleMethod } from "@/lib/sale";
 import { cn } from "@/lib/utils";
 import { useI18n } from "../i18n-provider";
 import { MoneyInput } from "../money-input";
@@ -13,13 +13,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "../ui/input";
 import type { CartLine } from "./till";
 
-const ICONS: Record<PaymentMethod, typeof BanknoteIcon> = { cash: BanknoteIcon, card: CreditCardIcon, transfer: SmartphoneIcon };
+const ICONS: Record<SaleMethod, typeof BanknoteIcon> = { cash: BanknoteIcon, card: CreditCardIcon, transfer: SmartphoneIcon, credit: NotebookPenIcon };
 
 export interface NewSaleBody {
   clientId: string;
   lines: CartLine[];
   discount: SaleDiscount | null;
-  payments: { method: PaymentMethod; cents: number }[];
+  payments: { method: SaleMethod; cents: number }[];
   note: string;
   customerId: number | null;
   expectedTotalCents: number;
@@ -27,7 +27,7 @@ export interface NewSaleBody {
 
 interface Row {
   key: number;
-  method: PaymentMethod;
+  method: SaleMethod;
   cents: number | null;
 }
 
@@ -47,6 +47,7 @@ export function PayDialog({
   cart,
   discount,
   customerId,
+  creditEnabled = false,
   totalCents,
   onClose,
   onDone,
@@ -56,6 +57,8 @@ export function PayDialog({
   cart: CartLine[];
   discount: SaleDiscount | null;
   customerId: number | null;
+  // The shop sells on account (needs a customer on the sale).
+  creditEnabled?: boolean;
   totalCents: number;
   onClose: () => void;
   onDone: (sale: Sale) => void;
@@ -80,11 +83,13 @@ export function PayDialog({
   const setRow = (key: number, change: Partial<Row>) => setRows((list) => list.map((r) => (r.key === key ? { ...r, ...change } : r)));
 
   // One tap: pay everything with this method.
-  const payAllWith = (method: PaymentMethod) => setRows([{ key: ++nextKey, method, cents: totalCents }]);
+  const methods: readonly SaleMethod[] = creditEnabled ? SALE_METHODS : PAYMENT_METHODS;
+  const usable = (m: SaleMethod) => m !== "credit" || customerId !== null;
+  const payAllWith = (method: SaleMethod) => setRows([{ key: ++nextKey, method, cents: totalCents }]);
 
   const split = () => {
     const used = new Set(rows.map((r) => r.method));
-    const method = PAYMENT_METHODS.find((m) => !used.has(m)) ?? "card";
+    const method = methods.find((m) => !used.has(m) && usable(m)) ?? "card";
     setRows((list) => [...list, { key: ++nextKey, method, cents: remaining }]);
   };
 
@@ -128,12 +133,12 @@ export function PayDialog({
           <p className="tabular text-3xl font-extrabold">{money(totalCents)}</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          {PAYMENT_METHODS.map((m) => {
+        <div className={cn("grid gap-2", methods.length === 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3")}>
+          {methods.map((m) => {
             const Icon = ICONS[m];
             const only = rows.length === 1 && rows[0].method === m && rows[0].cents === totalCents;
             return (
-              <Button key={m} variant={only ? "default" : "outline"} className="h-14 flex-col gap-1" onClick={() => payAllWith(m)}>
+              <Button key={m} variant={only ? "default" : "outline"} className="h-14 flex-col gap-1" disabled={!usable(m)} onClick={() => payAllWith(m)}>
                 <Icon className="size-5" />
                 <span className="text-xs">{t.till.methods[m]}</span>
               </Button>
@@ -146,11 +151,11 @@ export function PayDialog({
             <div key={r.key} className="flex items-center gap-2">
               <select
                 value={r.method}
-                onChange={(e) => setRow(r.key, { method: e.target.value as PaymentMethod })}
+                onChange={(e) => setRow(r.key, { method: e.target.value as SaleMethod })}
                 aria-label={t.till.method}
                 className="h-11 cursor-pointer rounded-lg border border-input bg-card px-2 text-sm"
               >
-                {PAYMENT_METHODS.map((m) => (
+                {methods.filter(usable).map((m) => (
                   <option key={m} value={m}>
                     {t.till.methods[m]}
                   </option>
@@ -174,6 +179,7 @@ export function PayDialog({
           )}
         </div>
 
+        {creditEnabled && customerId === null && <p className="text-xs text-muted-foreground">{t.credit.chooseCustomer}</p>}
         <div className="space-y-1 text-sm">
           {remaining > 0 && (
             <p className="flex justify-between font-semibold text-red-600 dark:text-red-400">

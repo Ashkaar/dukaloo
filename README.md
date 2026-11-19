@@ -31,6 +31,8 @@ Turkish, in light and dark mode.
 | A4 invoices | Done |
 | Offline: installable app, saved screens, outbox for sales and expenses | Done |
 | Reports and backups | Done |
+| Sales on account (optional): customer balances and repayments | Done |
+| Items sold by weight (optional): scale labels, USB/serial scales | Done |
 
 ## Stack
 
@@ -96,8 +98,12 @@ Set these in the Vercel project (Production). Never commit them.
 - **Plans.** A trial has everything. When active or in grace, the plan
   (starter / pro / advanced) decides the sections, in one place:
   `lib/plans.ts`. `getViewer()` (`lib/access.ts`) only returns sections in
-  the plan, so the navigation, the pages and the API all follow it. For now
-  every plan opens everything; the split will be decided on Ariloo.
+  the plan, so the navigation, the pages and the API all follow it.
+  Starter: dashboard, till, sales, products, expenses, staff, settings.
+  Pro: adds customers and purchases, and the optional features (sales on
+  account, scale barcodes). Advanced: adds reports. Optional features are
+  also listed per plan there (`PLAN_FEATURES`, read by `lib/features.ts`);
+  a shop still turns them on in Settings.
 - **Data.** Each shop has its own Turso database (`db_url`), opened with
   `SHOPS_DB_TOKEN`. Tables are created on first use (`lib/db/setup.ts`) and
   a new shop starts empty.
@@ -199,6 +205,31 @@ Set these in the Vercel project (Production). Never commit them.
   just a name and phone; the sale and receipt carry their name. Each
   customer's page shows their purchases, visits and total spent (less
   refunds). Deleting a customer hides them; past sales keep the name.
+- **Sales on account** (Settings → Selling, off by default, Pro and up):
+  "On account" becomes a payment method at the till, alone or mixed with
+  cash, card or transfer. It needs a customer on the sale. A customer's
+  balance is what they put on account, less refunds to their account, less
+  their repayments (`customer_payments`, each with a `clientId`); it shows
+  at the till, on the customer list and on their page, where "Record
+  payment" takes cash, card or transfer (the owner can delete one). Account
+  sales are not counted as money in Sales or Reports; repayments are, on the
+  day they come in. Reports show what all customers owe.
+- **Items sold by weight** (Settings → Selling, off by default, Pro and up):
+  - *Scale labels*: EAN-13 codes printed by a shop scale, `PP IIIII VVVVV C`:
+    a prefix (one for weight labels, default 21, and one for price labels,
+    default 22; 20 is not offered because Dukaloo's own barcodes use it),
+    the item's 5-digit code, the weight in grams or the price (whole units
+    without decimals, else hundredths), and the check digit. The item code
+    is matched to a variant's SKU or barcode (`00123` or `123`). A weight
+    label adds that weight; a price label adds the quantity that comes to
+    that price. Each label is its own cart line. A product barcode that
+    matches the whole code always wins. Parsing is in `lib/scale.ts`.
+  - *A scale on the till* (USB or serial, Web Serial in Chrome and Edge on
+    computers): "Read scale" in the till's quantity dialog for kg and g
+    items, and "Test the scale" in Settings. The speed (baud) is a setting;
+    the reader takes the last weight in what the scale sends (kg, g or lb;
+    a bare number is kg), and sends `W` if the scale stays quiet
+    (`components/till/scale-reader.ts`).
 - **Purchases** (Purchases section, with a Suppliers tab): scan, search or
   pick what came in, with quantity and cost each, the supplier and their
   invoice number. Receiving puts counted items into stock and (by default)

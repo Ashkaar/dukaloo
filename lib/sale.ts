@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { BAUD_RATES, DEFAULT_SCALE, normaliseScale, SCALE_PREFIXES, type ScaleSettings } from "./scale";
+
+const scalePrefixOk = (v: string) => v === "" || (SCALE_PREFIXES as readonly string[]).includes(v);
 
 // Selling: shared types, settings and the ONE function that works out a
 // sale's totals. The till uses it to show the cart; the server uses it to
@@ -8,8 +11,14 @@ import { z } from "zod";
 // basis points (15% = 1500). In a shop without decimals (IQD) every amount
 // is rounded to whole units, so nothing ever shows a fraction.
 
+// Ways money changes hands (also for expenses and customer repayments).
 export const PAYMENT_METHODS = ["cash", "card", "transfer"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+// Ways a sale can be paid: money, or "credit" (on the customer's account, to
+// pay later) when the shop has credit sales turned on.
+export const SALE_METHODS = [...PAYMENT_METHODS, "credit"] as const;
+export type SaleMethod = (typeof SALE_METHODS)[number];
+export const emptyByMethod = (): Record<SaleMethod, number> => ({ cash: 0, card: 0, transfer: 0, credit: 0 });
 
 // ---- Settings (owner, in Settings → Selling) ---------------------------------
 
@@ -17,6 +26,11 @@ export interface SalesSettings {
   // Sell even when stock shows zero or less (warn only). On by default: a new
   // shop has no stock entered yet.
   allowNegativeStock: boolean;
+  // Let a customer take goods now and pay later ("on account"). Off by
+  // default; needs a plan with credit sales.
+  creditSales: boolean;
+  // Items sold by weight: scale labels and a scale on the till.
+  scale: ScaleSettings;
   tax: {
     enabled: boolean;
     name: string;
@@ -35,12 +49,24 @@ export interface SalesSettings {
 
 export const DEFAULT_SALES_SETTINGS: SalesSettings = {
   allowNegativeStock: true,
+  creditSales: false,
+  scale: DEFAULT_SCALE,
   tax: { enabled: false, name: "VAT", rateBp: 0, inclusive: true },
   receipt: { header: "", footer: "", paper: "80" },
 };
 
 export const salesSettingsSchema = z.object({
   allowNegativeStock: z.boolean(),
+  creditSales: z.boolean().default(false),
+  scale: z
+    .object({
+      enabled: z.boolean(),
+      weightPrefix: z.string().refine(scalePrefixOk),
+      pricePrefix: z.string().refine(scalePrefixOk),
+      baudRate: z.number().int().refine((n) => (BAUD_RATES as readonly number[]).includes(n)),
+    })
+    .refine((v) => !v.weightPrefix || v.weightPrefix !== v.pricePrefix)
+    .default(DEFAULT_SCALE),
   tax: z.object({
     enabled: z.boolean(),
     name: z.string().trim().max(20),
@@ -62,6 +88,8 @@ export function normaliseSalesSettings(raw: unknown): SalesSettings {
   const receipt = (r.receipt && typeof r.receipt === "object" ? r.receipt : {}) as Record<string, unknown>;
   const merged = {
     allowNegativeStock: typeof r.allowNegativeStock === "boolean" ? r.allowNegativeStock : d.allowNegativeStock,
+    creditSales: typeof r.creditSales === "boolean" ? r.creditSales : d.creditSales,
+    scale: normaliseScale(r.scale),
     tax: {
       enabled: typeof tax.enabled === "boolean" ? tax.enabled : d.tax.enabled,
       name: typeof tax.name === "string" && tax.name.trim() ? tax.name.trim().slice(0, 20) : d.tax.name,
@@ -127,9 +155,10 @@ export function computeTotals(lines: LineIn[], saleDiscount: SaleDiscount | null
   return { lines: out, subtotalCents, discountCents, taxCents, totalCents };
 }
 
-// Payments against a total: non-cash may not exceed it; change comes only
-// from cash. Returns the change, or null when the payments don't work.
-export function settle(totalCents: number, payments: { method: PaymentMethod; cents: number }[]): { paidCents: number; changeCents: number } | null {
+// Payments against a total: non-cash (card, transfer, on account) may not
+// exceed it; change comes only from cash. Returns the change, or null when
+// the payments don't work.
+export function settle(totalCents: number, payments: { method: SaleMethod; cents: number }[]): { paidCents: number; changeCents: number } | null {
   const paidCents = payments.reduce((s, p) => s + p.cents, 0);
   const nonCash = payments.filter((p) => p.method !== "cash").reduce((s, p) => s + p.cents, 0);
   if (payments.some((p) => p.cents < 0)) return null;
@@ -156,7 +185,7 @@ export const newSaleSchema = z.object({
     .max(500),
   discount: z.union([z.object({ kind: z.literal("amount"), cents }), z.object({ kind: z.literal("percent"), bp: z.number().int().min(0).max(10_000) })]).nullable(),
   payments: z
-    .array(z.object({ method: z.enum(PAYMENT_METHODS), cents }))
+    .array(z.object({ method: z.enum(SALE_METHODS), cents }))
     .min(1)
     .max(10),
   note: z.string().trim().max(200),
@@ -192,7 +221,7 @@ export interface SaleReturn {
   at: number;
   staffName: string;
   refundCents: number;
-  method: PaymentMethod;
+  method: SaleMethod;
   note: string;
   lines: { saleLineId: number; qtyMilli: number; refundCents: number }[];
 }
@@ -221,7 +250,7 @@ export interface Sale {
   changeCents: number;
   note: string;
   lines: SaleLine[];
-  payments: { method: PaymentMethod; cents: number }[];
+  payments: { method: SaleMethod; cents: number }[];
   returns: SaleReturn[];
   // Everything refunded so far.
   refundedCents: number;
@@ -235,7 +264,7 @@ export interface SaleSummary {
   status: "done" | "voided";
   totalCents: number;
   itemCount: number;
-  methods: PaymentMethod[];
+  methods: SaleMethod[];
   refundedCents: number;
   offline?: boolean;
 }
@@ -272,7 +301,8 @@ export const newReturnSchema = z.object({
     .array(z.object({ saleLineId: z.number().int().positive(), qtyMilli: z.number().int().min(1).max(1_000_000_000) }))
     .min(1)
     .max(500),
-  method: z.enum(PAYMENT_METHODS),
+  // "credit" takes it off what the customer owes.
+  method: z.enum(SALE_METHODS),
   note: z.string().trim().max(200),
 });
 export type NewReturn = z.infer<typeof newReturnSchema>;

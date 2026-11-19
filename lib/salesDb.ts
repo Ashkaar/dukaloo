@@ -2,8 +2,8 @@ import "server-only";
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from "drizzle-orm";
 import { variantLabel } from "./catalog";
 import { getDb } from "./db";
-import { customers, products, productVariants, salePayments, saleLines, saleReturnLines, saleReturns, sales, shopSettings, stockMoves } from "./db/schema";
-import { computeTotals, refundFor, settle, type NewReturn, type NewSale, type PaymentMethod, type Sale, type SaleSummary, type SalesSettings, type TillItem } from "./sale";
+import { customerPayments, customers, products, productVariants, salePayments, saleLines, saleReturnLines, saleReturns, sales, shopSettings, stockMoves } from "./db/schema";
+import { computeTotals, emptyByMethod, refundFor, settle, type NewReturn, type NewSale, type SaleMethod, type Sale, type SaleSummary, type SalesSettings, type TillItem } from "./sale";
 import { stockLevels } from "./stockDb";
 
 const parse = (raw: string): string[] => {
@@ -59,14 +59,29 @@ export type CreateResult =
   | { ok: false; reason: "stock"; name: string }
   | { ok: false; reason: "changed"; totalCents: number }
   | { ok: false; reason: "customer" }
+  | { ok: false; reason: "credit-off" | "credit-customer" }
   | { ok: false; reason: "payment" };
 
 // Records a sale from the database's own prices. The till's total is only
 // compared, never trusted.
-export async function createSale(input: NewSale, settings: SalesSettings, decimals: 0 | 2, staff: { id: number | null; name: string }): Promise<CreateResult> {
+// `creditAllowed`: the shop has credit sales on and its plan includes them.
+export async function createSale(
+  input: NewSale,
+  settings: SalesSettings,
+  decimals: 0 | 2,
+  staff: { id: number | null; name: string },
+  creditAllowed = false,
+): Promise<CreateResult> {
   const db = await getDb();
   const existing = await db.select({ id: sales.id }).from(sales).where(eq(sales.clientId, input.clientId));
   if (existing[0]) return { ok: true, sale: (await getSale(existing[0].id))! };
+
+  // On account: only for a named customer, and only when the shop allows it
+  // (a sale made offline has already happened, so it is kept either way).
+  if (input.payments.some((p) => p.method === "credit" && p.cents > 0)) {
+    if (input.customerId === null) return { ok: false, reason: "credit-customer" };
+    if (!creditAllowed && !input.offline) return { ok: false, reason: "credit-off" };
+  }
 
   let customerName = "";
   if (input.customerId !== null) {
@@ -246,13 +261,13 @@ export async function getSale(id: number): Promise<Sale | null> {
       discountCents: l.discountCents,
       totalCents: l.totalCents,
     })),
-    payments: payments.map((p) => ({ method: p.method as PaymentMethod, cents: p.amountCents })),
+    payments: payments.map((p) => ({ method: p.method as SaleMethod, cents: p.amountCents })),
     returns: returns.map((r) => ({
       id: r.id,
       at: r.at,
       staffName: r.staffName,
       refundCents: r.refundCents,
-      method: r.method as PaymentMethod,
+      method: r.method as SaleMethod,
       note: r.note,
       lines: returnLines.filter((rl) => rl.returnId === r.id).map((rl) => ({ saleLineId: rl.saleLineId, qtyMilli: rl.qtyMilli, refundCents: rl.refundCents })),
     })),
@@ -265,7 +280,10 @@ export async function getSale(id: number): Promise<Sale | null> {
 export async function listSales(
   from: number,
   to: number,
-): Promise<{ sales: SaleSummary[]; totals: { count: number; totalCents: number; refundCents: number; byMethod: Record<PaymentMethod, number> } }> {
+): Promise<{
+  sales: SaleSummary[];
+  totals: { count: number; totalCents: number; refundCents: number; receivedCents: number; byMethod: Record<SaleMethod, number> };
+}> {
   const db = await getDb();
   const rows = await db
     .select({
@@ -277,7 +295,7 @@ export async function listSales(
       totalCents: sales.totalCents,
       changeCents: sales.changeCents,
       offline: sales.offline,
-      itemCount: sql<number>`(SELECT COUNT(*) FROM sale_lines l WHERE l.sale_id = ${sales.id})`,
+      itemCount: sql<number>`(SELECT COUNT(*) FROM sale_lines l WHERE l.sale_id = sales.id)`,
     })
     .from(sales)
     .where(and(gte(sales.at, from), lt(sales.at, to)))
@@ -286,11 +304,11 @@ export async function listSales(
   const payments = rows.length
     ? await db.select().from(salePayments).where(inArray(salePayments.saleId, rows.map((r) => r.id)))
     : [];
-  const methods = new Map<number, PaymentMethod[]>();
-  const byMethod: Record<PaymentMethod, number> = { cash: 0, card: 0, transfer: 0 };
+  const methods = new Map<number, SaleMethod[]>();
+  const byMethod: Record<SaleMethod, number> = emptyByMethod();
   const done = new Set(rows.filter((r) => r.status !== "voided").map((r) => r.id));
   for (const p of payments) {
-    const m = p.method as PaymentMethod;
+    const m = p.method as SaleMethod;
     methods.set(p.saleId, [...new Set([...(methods.get(p.saleId) ?? []), m])]);
     if (done.has(p.saleId) && m in byMethod) byMethod[m] += p.amountCents;
   }
@@ -304,7 +322,7 @@ export async function listSales(
   let refundCents = 0;
   for (const r of refunds) {
     refundCents += r.cents;
-    if (r.method in byMethod) byMethod[r.method as PaymentMethod] -= r.cents;
+    if (r.method in byMethod) byMethod[r.method as SaleMethod] -= r.cents;
   }
   const refundedBySale = new Map<number, number>();
   if (rows.length) {
@@ -314,6 +332,17 @@ export async function listSales(
       .where(inArray(saleReturns.saleId, rows.map((r) => r.id)))
       .groupBy(saleReturns.saleId);
     for (const r of all) refundedBySale.set(r.saleId, Number(r.cents));
+  }
+  // Repayments from customers paying off their account, by how they paid.
+  const received = await db
+    .select({ method: customerPayments.method, cents: sql<number>`SUM(${customerPayments.amountCents})` })
+    .from(customerPayments)
+    .where(and(gte(customerPayments.at, from), lt(customerPayments.at, to), isNull(customerPayments.deletedAt)))
+    .groupBy(customerPayments.method);
+  let receivedCents = 0;
+  for (const r of received) {
+    receivedCents += Number(r.cents);
+    if (r.method in byMethod) byMethod[r.method as SaleMethod] += Number(r.cents);
   }
   const live = rows.filter((r) => r.status !== "voided");
   return {
@@ -329,7 +358,7 @@ export async function listSales(
       refundedCents: refundedBySale.get(r.id) ?? 0,
       offline: r.offline === 1,
     })),
-    totals: { count: live.length, totalCents: live.reduce((s, r) => s + r.totalCents, 0) - refundCents, refundCents, byMethod },
+    totals: { count: live.length, totalCents: live.reduce((s, r) => s + r.totalCents, 0) - refundCents, refundCents, receivedCents, byMethod },
   };
 }
 
@@ -363,7 +392,7 @@ export async function voidSale(id: number, actor: string): Promise<boolean> {
   });
 }
 
-export type ReturnResult = { ok: true; sale: Sale } | { ok: false; reason: "not-found" | "voided" | "too-many" };
+export type ReturnResult = { ok: true; sale: Sale } | { ok: false; reason: "not-found" | "voided" | "too-many" | "credit-customer" };
 
 // Gives items back from a sale: refunds each line's share of what was paid,
 // and puts counted items back into stock. A retry with the same clientId
@@ -375,6 +404,8 @@ export async function createReturn(saleId: number, input: NewReturn, decimals: 0
   const [seen] = await db.select({ id: saleReturns.id }).from(saleReturns).where(eq(saleReturns.clientId, input.clientId));
   if (seen) return { ok: true, sale };
   if (sale.status === "voided") return { ok: false, reason: "voided" };
+  // Taking it off an account needs a customer to take it off.
+  if (input.method === "credit" && sale.customerId === null) return { ok: false, reason: "credit-customer" };
 
   const wanted = new Map<number, number>();
   for (const l of input.lines) wanted.set(l.saleLineId, (wanted.get(l.saleLineId) ?? 0) + l.qtyMilli);

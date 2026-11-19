@@ -70,6 +70,14 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      scale: {
+        title: "Tartılı satış",
+        text: "Ayarlar’dan açın: mağaza terazinizin bastığı etiketleri (ağırlık veya fiyat) okutun ya da kasaya bağlı teraziyi okuyun.",
+      },
+      credit: {
+        title: "Veresiye satış",
+        text: "Düzenli müşterilerin sonra ödemesi için Ayarlar’dan açın. Her müşterinin borcunu görün, ödemelerini kaydedin ve toplam borcu Raporlar’da görün.",
+      },
       offline: {
         title: "Çevrimdışı çalışır",
         text: "Dukaloo’yu kasaya, telefona veya tablete kurun. Bağlantı kesilince satışa devam edin: satışlar ve giderler cihazda tutulur, bağlantı gelince gönderilir.",
@@ -383,6 +391,7 @@ const tr: Messages = {
       cash: "Nakit",
       card: "Kart",
       transfer: "Havale",
+      credit: "Veresiye",
     },
     method: "Ödeme yöntemi",
     received: "Alınan",
@@ -680,6 +689,45 @@ const tr: Messages = {
     badge: "Çevrimdışı",
     savedOffline: "Bu cihaza kaydedildi. Bağlantı gelince gönderilecek.",
     receiptTitle: "Çevrimdışı satış",
+  },
+
+  credit: {
+    needsCustomer: "Veresiye satış için bir müşteri seçin.",
+    off: "Veresiye satış Ayarlar’da kapalı.",
+    owes: (amount: string) => `Borcu ${amount}`,
+    chooseCustomer: "Veresiye satış için bir müşteri seçin.",
+    received: "Müşterilerden",
+    receivedNote: "Veresiye satış ödemeleri, yukarıya dahil",
+    owedTotal: "Müşteri borçları",
+    receivedIn: (amount: string) => `Bu dönemde ${amount} ödendi`,
+    setting: "Veresiye satış",
+    settingNote: "Düzenli müşterilerin malı şimdi alıp sonra ödemesine izin verin. Satış bir müşteri gerektirir ve bakiyesi müşterinin sayfasında görünür.",
+    notInPlan: "Planınızda yok. Veresiye satış için Ariloo’da planınızı yükseltin.",
+    account: "Hesap",
+    owedNow: "Şu anki borç",
+    inCredit: (amount: string) => `${amount} alacaklı`,
+    nothingOwed: "Borcu yok",
+    recordPayment: "Ödeme kaydet",
+    payments: "Ödemeler",
+    paymentSaved: "Ödeme kaydedildi.",
+    deletePayment: "Bu ödeme silinsin mi?",
+  },
+
+  scale: {
+    setting: "Tartılı satış",
+    settingNote: "Mağaza terazisinin bastığı etiketleri ve kasanın USB veya seri portuna bağlı teraziyi okuyun.",
+    notInPlan: "Planınızda yok. Terazi kullanmak için Ariloo’da planınızı yükseltin.",
+    weightPrefix: "Ağırlık etiketlerinin başı",
+    pricePrefix: "Fiyat etiketlerinin başı",
+    none: "Kullanılmıyor",
+    speed: "Terazi hızı (baud)",
+    labelHint: "Terazi etiketleri 13 hanelidir: yukarıdaki baş, ürünün 5 haneli kodu (ürüne bu SKU’yu veya barkodu verin, ör. 00123), sonra gram cinsinden ağırlık veya fiyat, sonra kontrol hanesi.",
+    test: "Teraziyi dene",
+    testResult: (weight: string) => `Terazi ${weight} gösteriyor.`,
+    read: "Teraziyi oku",
+    reading: "Okunuyor…",
+    noPort: "Terazi seçilmedi. Bağlayıp tekrar deneyin (bilgisayarda Chrome veya Edge).",
+    noReading: "Teraziden ağırlık gelmedi. Açık, sabit ve Ayarlar’daki hızda olduğundan emin olun.",
   },
 
   errors: {

@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
-import { badRequest, ok, parseBody, requireSection, serverError } from "@/lib/api";
+import { planIncludes } from "@/lib/features";
+import { badRequest, notFound, ok, parseBody, requireSection, serverError } from "@/lib/api";
 import { customerSchema } from "@/lib/customers";
 import { createCustomer, listCustomers, phoneTaken } from "@/lib/customersDb";
 import { getMessages } from "@/lib/i18n/server";
@@ -8,6 +9,7 @@ import { getMessages } from "@/lib/i18n/server";
 export async function GET(request: NextRequest) {
   const { error } = await requireSection("customers", "till");
   if (error) return error;
+  if (!(await planIncludes("customers"))) return notFound();
   const params = request.nextUrl.searchParams;
   const offset = Number(params.get("offset"));
   const limit = Number(params.get("limit"));
@@ -28,6 +30,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error: authError } = await requireSection("customers", "till");
   if (authError) return authError;
+  if (!(await planIncludes("customers"))) return notFound();
   const { data, error } = await parseBody(request, customerSchema);
   if (error) return error;
   try {
