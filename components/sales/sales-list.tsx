@@ -187,7 +187,7 @@ function SaleDialog({
               {sale.status === "voided" && <Badge variant="destructive">{t.sales.voided}</Badge>}
             </DialogTitle>
             <DialogDescription>
-              {dateTime(sale.at)} · {sale.staffName || t.header.owner}
+              {[dateTime(sale.at), sale.staffName || t.header.owner, sale.customerName].filter(Boolean).join(" · ")}
             </DialogDescription>
           </DialogHeader>
           <ul className="divide-y divide-border rounded-lg border border-border text-sm">

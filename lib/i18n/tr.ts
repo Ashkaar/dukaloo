@@ -39,6 +39,7 @@ const tr: Messages = {
     till: "Kasa",
     sales: "Satışlar",
     products: "Ürünler",
+    customers: "Müşteriler",
     staff: "Personel",
     settings: "Ayarlar",
     more: "Daha fazla",
@@ -65,6 +66,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      customers: {
+        title: "Müşteriler",
+        text: "Müşterilerinizin listesini tutun, kasada satışa müşteri ekleyin ve her birinin ne aldığını görün.",
+      },
       camera: {
         title: "Kamerayla okutma",
         text: "Barkod okuyucunuz yok mu? Kasada, ürün aramasında ve barkod alanında telefon veya tabletin kamerasıyla okutun.",
@@ -394,6 +399,7 @@ const tr: Messages = {
   receipt: {
     receipt: "Fiş",
     cashier: "Kasiyer",
+    customer: "Müşteri",
     subtotal: "Ara toplam",
     discount: "İndirim",
     total: "Toplam",
@@ -464,6 +470,38 @@ const tr: Messages = {
     last: "Son okutulan:",
     denied: "Kamera engelli. Tarayıcının site ayarlarından izin verip tekrar deneyin.",
     unsupported: "Bu tarayıcı burada kamerayı kullanamıyor.",
+  },
+
+  customers: {
+    title: "Müşteriler",
+    intro: "Sizden alışveriş yapan kişiler ve aldıkları.",
+    add: "Müşteri ekle",
+    search: "Ad veya telefonla arayın",
+    none: "Henüz müşteri yok.",
+    noneFound: "Müşteri bulunamadı.",
+    visits: (n: number) => `${n} ziyaret`,
+    lastVisit: (d: string) => `son ${d}`,
+    newTitle: "Yeni müşteri",
+    editTitle: "Müşteriyi düzenle",
+    name: "Ad",
+    phone: "Telefon",
+    email: "E-posta",
+    address: "Adres",
+    note: "Not",
+    back: "Tüm müşteriler",
+    spent: "Harcama",
+    visitsLabel: "Ziyaret",
+    history: "Alışverişler",
+    noSales: "Henüz alışveriş yok.",
+    deleted: "Müşteri silindi.",
+    deleteTitle: (name: string) => `${name} silinsin mi?`,
+    deleteText: "Listeden ve kasadan kalkar. Geçmiş satışlar adını korur.",
+    pickTitle: "Bu satışın müşterisi",
+    pickIntro: "Ad veya telefonla bulun ya da ekleyin.",
+    noCustomer: "Müşteri yok",
+    addToSale: "Müşteri ekle (isteğe bağlı)",
+    gone: "Bu müşteri artık yok. Başka birini seçin.",
+    phoneTaken: (name: string) => `Bu telefon numarası ${name} adlı müşteriye ait.`,
   },
 
   errors: {

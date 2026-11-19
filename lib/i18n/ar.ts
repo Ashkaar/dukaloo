@@ -39,6 +39,7 @@ const ar: Messages = {
     till: "نقطة البيع",
     sales: "المبيعات",
     products: "المنتجات",
+    customers: "العملاء",
     staff: "الموظفون",
     settings: "الإعدادات",
     more: "المزيد",
@@ -65,6 +66,10 @@ const ar: Messages = {
     markRead: "تعليم الكل كمقروء",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      customers: {
+        title: "العملاء",
+        text: "احتفظ بقائمة عملائك، وأضف عميلًا إلى عملية البيع في نقطة البيع، واطّلع على ما اشتراه كل منهم.",
+      },
       camera: {
         title: "المسح بالكاميرا",
         text: "لا يوجد قارئ باركود؟ امسح بكاميرا الهاتف أو الجهاز اللوحي في نقطة البيع وفي البحث عن المنتجات وفي حقل الباركود.",
@@ -394,6 +399,7 @@ const ar: Messages = {
   receipt: {
     receipt: "إيصال",
     cashier: "الكاشير",
+    customer: "العميل",
     subtotal: "المجموع الفرعي",
     discount: "الخصم",
     total: "الإجمالي",
@@ -464,6 +470,38 @@ const ar: Messages = {
     last: "آخر مسح:",
     denied: "الكاميرا محظورة. اسمح بها من إعدادات الموقع في المتصفح ثم حاول مرة أخرى.",
     unsupported: "لا يمكن لهذا المتصفح استخدام الكاميرا هنا.",
+  },
+
+  customers: {
+    title: "العملاء",
+    intro: "الأشخاص الذين يشترون منك، وما اشتروه.",
+    add: "إضافة عميل",
+    search: "ابحث بالاسم أو الهاتف",
+    none: "لا يوجد عملاء بعد.",
+    noneFound: "لم يُعثر على عميل.",
+    visits: (n: number) => `${n} زيارات`,
+    lastVisit: (d: string) => `آخرها ${d}`,
+    newTitle: "عميل جديد",
+    editTitle: "تعديل العميل",
+    name: "الاسم",
+    phone: "الهاتف",
+    email: "البريد الإلكتروني",
+    address: "العنوان",
+    note: "ملاحظة",
+    back: "كل العملاء",
+    spent: "المُنفَق",
+    visitsLabel: "الزيارات",
+    history: "المشتريات",
+    noSales: "لا توجد مشتريات بعد.",
+    deleted: "تم حذف العميل.",
+    deleteTitle: (name: string) => `حذف ${name}؟`,
+    deleteText: "يختفي من القائمة ومن نقطة البيع. تحتفظ المبيعات السابقة باسمه.",
+    pickTitle: "عميل هذه العملية",
+    pickIntro: "ابحث عنه بالاسم أو الهاتف، أو أضِفه.",
+    noCustomer: "بلا عميل",
+    addToSale: "إضافة عميل (اختياري)",
+    gone: "هذا العميل لم يعد موجودًا. اختر غيره.",
+    phoneTaken: (name: string) => `رقم الهاتف هذا يخص ${name}.`,
   },
 
   errors: {

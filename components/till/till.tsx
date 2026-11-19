@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgePercentIcon, MinusIcon, PackageIcon, PlusIcon, ScanBarcodeIcon, SearchIcon, ShoppingCartIcon, Trash2Icon, XIcon } from "lucide-react";
+import { BadgePercentIcon, ContactRoundIcon, MinusIcon, PackageIcon, PlusIcon, ScanBarcodeIcon, SearchIcon, ShoppingCartIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DECIMAL_UNITS, type Category, type Unit } from "@/lib/catalog";
@@ -19,6 +19,7 @@ import { Label } from "../ui/label";
 import { Sheet, SheetContent, SheetTitle } from "../ui/sheet";
 import { useScanner } from "../use-scanner";
 import { CameraScannerButton } from "../camera-scanner";
+import { CustomerPicker, type PickedCustomer } from "./customer-picker";
 import { PayDialog } from "./pay-dialog";
 import { ReceiptDialog } from "./receipt-dialog";
 
@@ -37,6 +38,8 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
   const [settings, setSettings] = useState(initialSettings);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [discount, setDiscount] = useState<SaleDiscount | null>(null);
+  const [customer, setCustomer] = useState<PickedCustomer | null>(null);
+  const [picking, setPicking] = useState(false);
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<number>(ALL);
   const [editing, setEditing] = useState<number | null>(null);
@@ -101,7 +104,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
 
   useScanner((code) => {
     if (!addByCode(code)) toast.error(t.till.notFound(code));
-  }, !paying && !done && editing === null && !discounting);
+  }, !paying && !done && editing === null && !discounting && !picking);
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -124,6 +127,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
   const clear = () => {
     setCart([]);
     setDiscount(null);
+    setCustomer(null);
   };
 
   const finished = (sale: Sale) => {
@@ -205,6 +209,14 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
         )}
       </div>
       <div className="space-y-1.5 border-t border-border px-4 py-3 text-sm">
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          className="mb-1 flex w-full cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-start hover:bg-highlight"
+        >
+          <ContactRoundIcon className="size-4 text-muted-foreground" />
+          <span className={cn("min-w-0 flex-1 truncate", customer ? "font-semibold" : "text-muted-foreground")}>{customer ? customer.name : t.customers.addToSale}</span>
+        </button>
         <Row label={t.till.subtotal} value={money(totals.subtotalCents)} />
         {totals.discountCents > 0 && <Row label={t.till.discount} value={`-${money(totals.discountCents)}`} accent />}
         {settings.tax.enabled && totals.taxCents > 0 && !settings.tax.inclusive && <Row label={`${settings.tax.name} ${rate}`} value={money(totals.taxCents)} />}
@@ -369,7 +381,17 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
           }}
         />
       )}
-      {paying && <PayDialog cart={cart} discount={discount} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} />}
+      {picking && (
+        <CustomerPicker
+          current={customer}
+          onClose={() => setPicking(false)}
+          onPick={(c) => {
+            setCustomer(c);
+            setPicking(false);
+          }}
+        />
+      )}
+      {paying && <PayDialog cart={cart} discount={discount} customerId={customer?.id ?? null} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} />}
       {done && <ReceiptDialog sale={done} settings={settings} onClose={() => setDone(null)} />}
     </div>
   );

@@ -64,6 +64,7 @@ export function receiptHtml(sale: Sale, ctx: ReceiptContext, title?: string): st
     <div class="rule"></div>
     ${row(title ?? `${r.receipt} #${sale.number}`, ctx.dateTime(sale.at), "sub")}
     ${sale.staffName ? row(r.cashier, sale.staffName, "sub") : ""}
+    ${sale.customerName ? row(r.customer, sale.customerName, "sub") : ""}
     ${sale.status === "voided" ? `<div class="void">${esc(r.voided)}</div>` : ""}
     <div class="rule"></div>${lines}<div class="rule"></div>${totals}<div class="rule"></div>${payments}
     ${sale.note ? `<div class="rule"></div><div class="pre sub">${esc(sale.note)}</div>` : ""}

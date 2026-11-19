@@ -160,6 +160,8 @@ export const newSaleSchema = z.object({
     .min(1)
     .max(10),
   note: z.string().trim().max(200),
+  // The customer the sale is for, if any.
+  customerId: z.number().int().positive().nullable().default(null),
   // The total the cashier saw; the server refuses the sale if prices changed since.
   expectedTotalCents: cents,
 });
@@ -197,6 +199,8 @@ export interface Sale {
   number: number;
   at: number;
   staffName: string;
+  customerId: number | null;
+  customerName: string;
   status: "done" | "voided";
   subtotalCents: number;
   discountCents: number;

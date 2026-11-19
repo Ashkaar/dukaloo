@@ -23,7 +23,7 @@ Turkish, in light and dark mode.
 | Till: scanner, cart, discounts, mixed payments, tax, receipts; sales by day with reprint and void | Done |
 | Returns and refunds | Done |
 | Camera barcode scanning | Done |
-| Customers on the till | Next |
+| Customers: list, history, picked at the till, on receipts | Done |
 | Stock levels and quick adjustments | Done |
 | Purchases, suppliers, stock counts, low-stock alerts | Planned |
 | Customers, expenses, invoices | Planned |
@@ -191,6 +191,12 @@ Set these in the Vercel project (Production). Never commit them.
   cash, card or transfer and subtracted from that day's takings; counted
   items go back into stock; a return slip can be printed. A sale with
   returns can't be voided (return the rest instead).
+- **Customers**: a list searched by name or phone (kept as digits, so
+  "0750 123 4567" and "07501234567" are one person, and a phone belongs to
+  one customer). At the till, "Add a customer" finds one or adds one with
+  just a name and phone; the sale and receipt carry their name. Each
+  customer's page shows their purchases, visits and total spent (less
+  refunds). Deleting a customer hides them; past sales keep the name.
 - **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
   sale, void, and later purchase and return); the level is their sum.
   Products can be set not to count stock (services). The product editor

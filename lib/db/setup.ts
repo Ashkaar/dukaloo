@@ -177,12 +177,29 @@ export const SCHEMA: string[] = [
   )`,
   "CREATE INDEX IF NOT EXISTS sale_return_lines_return ON sale_return_lines (return_id)",
   "CREATE INDEX IF NOT EXISTS sale_return_lines_line ON sale_return_lines (sale_line_id)",
+
+  // ---- Customers ----
+  `CREATE TABLE IF NOT EXISTS customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    address TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    archived_at INTEGER
+  )`,
+  "CREATE INDEX IF NOT EXISTS customers_name ON customers (name COLLATE NOCASE)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS customers_phone ON customers (phone) WHERE phone <> '' AND archived_at IS NULL",
 ];
 
 // Columns added to tables after they first shipped: [table, column, definition].
 export const ADDED_COLUMNS: [string, string, string][] = [
   // Count this product's stock (off for services and things not counted).
   ["products", "track_stock", "INTEGER NOT NULL DEFAULT 1"],
+  // The customer a sale was for (and their name then, for the records).
+  ["sales", "customer_id", "INTEGER"],
+  ["sales", "customer_name", "TEXT NOT NULL DEFAULT ''"],
 ];
 
 async function addMissingColumns(client: Client): Promise<void> {
@@ -206,4 +223,6 @@ async function addMissingColumns(client: Client): Promise<void> {
 export async function setUp(client: Client): Promise<void> {
   await client.batch(SCHEMA, "write");
   await addMissingColumns(client);
+  // Indexes on added columns, once the columns exist.
+  await client.execute("CREATE INDEX IF NOT EXISTS sales_customer ON sales (customer_id)");
 }

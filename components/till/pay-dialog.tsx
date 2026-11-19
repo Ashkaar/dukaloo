@@ -35,6 +35,7 @@ function newClientId(): string {
 export function PayDialog({
   cart,
   discount,
+  customerId,
   totalCents,
   onClose,
   onDone,
@@ -42,6 +43,7 @@ export function PayDialog({
 }: {
   cart: CartLine[];
   discount: SaleDiscount | null;
+  customerId: number | null;
   totalCents: number;
   onClose: () => void;
   onDone: (sale: Sale) => void;
@@ -82,6 +84,7 @@ export function PayDialog({
         discount,
         payments: payments.filter((p) => p.cents > 0),
         note: note.trim(),
+        customerId,
         expectedTotalCents: totalCents,
       });
       onDone(sale);

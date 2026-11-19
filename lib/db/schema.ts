@@ -165,6 +165,9 @@ export const sales = sqliteTable(
     note: text("note").notNull().default(""),
     voidedAt: integer("voided_at"),
     voidedBy: text("voided_by").notNull().default(""),
+    // Added later (ADDED_COLUMNS).
+    customerId: integer("customer_id"),
+    customerName: text("customer_name").notNull().default(""),
   },
   (t) => [uniqueIndex("sales_client_id").on(t.clientId), uniqueIndex("sales_number").on(t.number), index("sales_at").on(t.at)],
 );
@@ -227,4 +230,21 @@ export const saleReturnLines = sqliteTable(
     refundCents: integer("refund_cents").notNull(),
   },
   (t) => [index("sale_return_lines_return").on(t.returnId), index("sale_return_lines_line").on(t.saleLineId)],
+);
+
+// ---- Customers ------------------------------------------------------------
+
+export const customers = sqliteTable(
+  "customers",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    phone: text("phone").notNull().default(""),
+    email: text("email").notNull().default(""),
+    address: text("address").notNull().default(""),
+    note: text("note").notNull().default(""),
+    createdAt: integer("created_at").notNull(),
+    archivedAt: integer("archived_at"),
+  },
+  (t) => [index("customers_name").on(sql`${t.name} COLLATE NOCASE`), uniqueIndex("customers_phone").on(t.phone).where(sql`${t.phone} <> '' AND ${t.archivedAt} IS NULL`)],
 );

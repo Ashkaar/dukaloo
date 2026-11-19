@@ -2,7 +2,7 @@ import "server-only";
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from "drizzle-orm";
 import { variantLabel } from "./catalog";
 import { getDb } from "./db";
-import { products, productVariants, salePayments, saleLines, saleReturnLines, saleReturns, sales, shopSettings, stockMoves } from "./db/schema";
+import { customers, products, productVariants, salePayments, saleLines, saleReturnLines, saleReturns, sales, shopSettings, stockMoves } from "./db/schema";
 import { computeTotals, refundFor, settle, type NewReturn, type NewSale, type PaymentMethod, type Sale, type SaleSummary, type SalesSettings, type TillItem } from "./sale";
 import { stockLevels } from "./stockDb";
 
@@ -58,6 +58,7 @@ export type CreateResult =
   | { ok: false; reason: "unavailable"; name: string }
   | { ok: false; reason: "stock"; name: string }
   | { ok: false; reason: "changed"; totalCents: number }
+  | { ok: false; reason: "customer" }
   | { ok: false; reason: "payment" };
 
 // Records a sale from the database's own prices. The till's total is only
@@ -66,6 +67,16 @@ export async function createSale(input: NewSale, settings: SalesSettings, decima
   const db = await getDb();
   const existing = await db.select({ id: sales.id }).from(sales).where(eq(sales.clientId, input.clientId));
   if (existing[0]) return { ok: true, sale: (await getSale(existing[0].id))! };
+
+  let customerName = "";
+  if (input.customerId !== null) {
+    const [c] = await db
+      .select({ name: customers.name })
+      .from(customers)
+      .where(and(eq(customers.id, input.customerId), isNull(customers.archivedAt)));
+    if (!c) return { ok: false, reason: "customer" };
+    customerName = c.name;
+  }
 
   const ids = [...new Set(input.lines.map((l) => l.variantId))];
   const rows = await db
@@ -129,6 +140,8 @@ export async function createSale(input: NewSale, settings: SalesSettings, decima
           at,
           staffId: staff.id,
           staffName: staff.name,
+          customerId: input.customerId,
+          customerName,
           subtotalCents: totals.subtotalCents,
           discountCents: totals.discountCents,
           taxCents: totals.taxCents,
@@ -196,6 +209,8 @@ export async function getSale(id: number): Promise<Sale | null> {
     number: s.number,
     at: s.at,
     staffName: s.staffName,
+    customerId: s.customerId,
+    customerName: s.customerName,
     status: s.status === "voided" ? "voided" : "done",
     subtotalCents: s.subtotalCents,
     discountCents: s.discountCents,
