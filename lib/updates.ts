@@ -14,6 +14,14 @@ export interface Update {
 }
 
 export const UPDATES: Update[] = [
+  { id: "offline", at: "2026-11-20T01:00:00Z" },
+  { id: "invoices", at: "2026-11-20T00:00:00Z" },
+  { id: "reports", at: "2026-11-19T23:00:00Z" },
+  { id: "expenses", at: "2026-11-19T22:00:00Z" },
+  { id: "purchases", at: "2026-11-19T21:00:00Z" },
+  { id: "customers", at: "2026-11-19T20:00:00Z" },
+  { id: "camera", at: "2026-11-19T19:00:00Z" },
+  { id: "returns", at: "2026-11-19T18:00:00Z" },
   { id: "till", at: "2026-11-19T12:00:00Z" },
   { id: "timeZone", at: "2026-11-18T10:00:00Z" },
   { id: "catalog", at: "2026-11-17T22:00:00Z" },

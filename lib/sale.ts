@@ -160,6 +160,11 @@ export const newSaleSchema = z.object({
     .min(1)
     .max(10),
   note: z.string().trim().max(200),
+  // Made while offline and sent later: the customer has paid and gone, so
+  // it is recorded even if a price changed or stock shows zero since.
+  offline: z.boolean().default(false),
+  // The customer the sale is for, if any.
+  customerId: z.number().int().positive().nullable().default(null),
   // The total the cashier saw; the server refuses the sale if prices changed since.
   expectedTotalCents: cents,
 });
@@ -168,6 +173,8 @@ export type NewSale = z.infer<typeof newSaleSchema>;
 // ---- A recorded sale ----------------------------------------------------------
 
 export interface SaleLine {
+  // The sale line's own id (returns point at it).
+  id: number;
   variantId: number;
   name: string;
   variantLabel: string;
@@ -176,6 +183,18 @@ export interface SaleLine {
   unitPriceCents: number;
   discountCents: number;
   totalCents: number;
+  // How much of this line has been returned so far.
+  returnedMilli: number;
+}
+
+export interface SaleReturn {
+  id: number;
+  at: number;
+  staffName: string;
+  refundCents: number;
+  method: PaymentMethod;
+  note: string;
+  lines: { saleLineId: number; qtyMilli: number; refundCents: number }[];
 }
 
 export interface Sale {
@@ -183,6 +202,13 @@ export interface Sale {
   number: number;
   at: number;
   staffName: string;
+  customerId: number | null;
+  customerName: string;
+  // The customer's details now (for an invoice), "" without a customer.
+  customerPhone: string;
+  customerAddress: string;
+  // Recorded on the till while offline, sent later.
+  offline: boolean;
   status: "done" | "voided";
   subtotalCents: number;
   discountCents: number;
@@ -196,6 +222,9 @@ export interface Sale {
   note: string;
   lines: SaleLine[];
   payments: { method: PaymentMethod; cents: number }[];
+  returns: SaleReturn[];
+  // Everything refunded so far.
+  refundedCents: number;
 }
 
 export interface SaleSummary {
@@ -207,6 +236,8 @@ export interface SaleSummary {
   totalCents: number;
   itemCount: number;
   methods: PaymentMethod[];
+  refundedCents: number;
+  offline?: boolean;
 }
 
 // A sellable item as the till keeps it in memory.
@@ -223,3 +254,25 @@ export interface TillItem {
   trackStock: boolean;
   stockMilli: number;
 }
+
+// ---- Returns ------------------------------------------------------------------
+
+// What returning `qtyMilli` of a sale line gives back: the line's share of
+// what the customer actually paid, so a discount on the whole sale, and
+// tax added at the till, are refunded in proportion.
+export function refundFor(sale: Pick<Sale, "subtotalCents" | "totalCents">, line: Pick<SaleLine, "qtyMilli" | "totalCents">, qtyMilli: number, decimals: 0 | 2): number {
+  if (line.qtyMilli <= 0 || sale.subtotalCents <= 0) return 0;
+  const lineShare = (line.totalCents * Math.min(qtyMilli, line.qtyMilli)) / line.qtyMilli;
+  return roundMoney((lineShare * sale.totalCents) / sale.subtotalCents, decimals);
+}
+
+export const newReturnSchema = z.object({
+  clientId: z.string().regex(/^[A-Za-z0-9_-]{8,64}$/),
+  lines: z
+    .array(z.object({ saleLineId: z.number().int().positive(), qtyMilli: z.number().int().min(1).max(1_000_000_000) }))
+    .min(1)
+    .max(500),
+  method: z.enum(PAYMENT_METHODS),
+  note: z.string().trim().max(200),
+});
+export type NewReturn = z.infer<typeof newReturnSchema>;

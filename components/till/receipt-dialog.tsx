@@ -25,7 +25,7 @@ export function ReceiptDialog({ sale, settings, onClose }: { sale: Sale; setting
         <DialogHeader className="items-center pe-0 text-center">
           <CheckCircle2Icon className="size-12 text-primary" />
           <DialogTitle>{t.till.done}</DialogTitle>
-          <DialogDescription>{t.till.receiptNo(sale.number)}</DialogDescription>
+          <DialogDescription>{sale.offline && !sale.number ? t.offline.savedOffline : t.till.receiptNo(sale.number)}</DialogDescription>
         </DialogHeader>
         <div className="rounded-xl bg-muted px-4 py-3">
           <p className="tabular text-2xl font-extrabold">{money(sale.totalCents)}</p>

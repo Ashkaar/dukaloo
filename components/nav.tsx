@@ -1,4 +1,4 @@
-import { LayoutDashboardIcon, PackageIcon, ReceiptTextIcon, SettingsIcon, ShoppingCartIcon, UsersIcon, type LucideIcon } from "lucide-react";
+import { LayoutDashboardIcon, PackageIcon, ChartColumnIcon, ContactRoundIcon, ReceiptTextIcon, TruckIcon, WalletIcon, SettingsIcon, ShoppingCartIcon, UsersIcon, type LucideIcon } from "lucide-react";
 import type { Messages } from "@/lib/i18n";
 import { SECTION_HREF, type Section } from "@/lib/sections";
 
@@ -9,6 +9,10 @@ export const NAV: Record<Section, { icon: LucideIcon; label: (t: Messages) => st
   till: { icon: ShoppingCartIcon, label: (t) => t.nav.till, primary: true },
   sales: { icon: ReceiptTextIcon, label: (t) => t.nav.sales, primary: true },
   products: { icon: PackageIcon, label: (t) => t.nav.products, primary: true },
+  purchases: { icon: TruckIcon, label: (t) => t.nav.purchases, primary: false },
+  reports: { icon: ChartColumnIcon, label: (t) => t.nav.reports, primary: false },
+  expenses: { icon: WalletIcon, label: (t) => t.nav.expenses, primary: false },
+  customers: { icon: ContactRoundIcon, label: (t) => t.nav.customers, primary: false },
   staff: { icon: UsersIcon, label: (t) => t.nav.staff, primary: false },
   settings: { icon: SettingsIcon, label: (t) => t.nav.settings, primary: false },
 };

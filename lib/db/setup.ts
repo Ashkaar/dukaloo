@@ -152,12 +152,124 @@ export const SCHEMA: string[] = [
     amount_cents INTEGER NOT NULL
   )`,
   "CREATE INDEX IF NOT EXISTS sale_payments_sale ON sale_payments (sale_id)",
+
+  // ---- Returns: items given back from a sale, and the money refunded ----
+  `CREATE TABLE IF NOT EXISTS sale_returns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_id INTEGER NOT NULL,
+    client_id TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    staff_name TEXT NOT NULL DEFAULT '',
+    refund_cents INTEGER NOT NULL,
+    method TEXT NOT NULL,
+    note TEXT NOT NULL DEFAULT ''
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS sale_returns_client_id ON sale_returns (client_id)",
+  "CREATE INDEX IF NOT EXISTS sale_returns_sale ON sale_returns (sale_id)",
+  "CREATE INDEX IF NOT EXISTS sale_returns_at ON sale_returns (at)",
+  `CREATE TABLE IF NOT EXISTS sale_return_lines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    return_id INTEGER NOT NULL,
+    sale_line_id INTEGER NOT NULL,
+    variant_id INTEGER NOT NULL,
+    qty_milli INTEGER NOT NULL,
+    refund_cents INTEGER NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS sale_return_lines_return ON sale_return_lines (return_id)",
+  "CREATE INDEX IF NOT EXISTS sale_return_lines_line ON sale_return_lines (sale_line_id)",
+
+  // ---- Customers ----
+  `CREATE TABLE IF NOT EXISTS customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    address TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    archived_at INTEGER
+  )`,
+  "CREATE INDEX IF NOT EXISTS customers_name ON customers (name COLLATE NOCASE)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS customers_phone ON customers (phone) WHERE phone <> '' AND archived_at IS NULL",
+
+  // ---- Suppliers and purchases (stock coming in) ----
+  `CREATE TABLE IF NOT EXISTS suppliers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    address TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    archived_at INTEGER
+  )`,
+  "CREATE INDEX IF NOT EXISTS suppliers_name ON suppliers (name COLLATE NOCASE)",
+  `CREATE TABLE IF NOT EXISTS purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    number INTEGER NOT NULL,
+    client_id TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    supplier_id INTEGER,
+    supplier_name TEXT NOT NULL DEFAULT '',
+    reference TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    total_cents INTEGER NOT NULL,
+    staff_name TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'received',
+    cancelled_at INTEGER,
+    cancelled_by TEXT NOT NULL DEFAULT ''
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS purchases_client_id ON purchases (client_id)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS purchases_number ON purchases (number)",
+  "CREATE INDEX IF NOT EXISTS purchases_at ON purchases (at)",
+  "CREATE INDEX IF NOT EXISTS purchases_supplier ON purchases (supplier_id)",
+  `CREATE TABLE IF NOT EXISTS purchase_lines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_id INTEGER NOT NULL,
+    variant_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    variant_label TEXT NOT NULL DEFAULT '',
+    qty_milli INTEGER NOT NULL,
+    unit_cost_cents INTEGER NOT NULL,
+    total_cents INTEGER NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS purchase_lines_purchase ON purchase_lines (purchase_id)",
+  "CREATE INDEX IF NOT EXISTS purchase_lines_variant ON purchase_lines (variant_id)",
+
+  // ---- Expenses ----
+  `CREATE TABLE IF NOT EXISTS expense_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS expense_types_name ON expense_types (name COLLATE NOCASE)",
+  // day: the calendar day it belongs to ("YYYY-MM-DD", in the shop's time zone).
+  `CREATE TABLE IF NOT EXISTS expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id TEXT NOT NULL,
+    day TEXT NOT NULL,
+    type_id INTEGER,
+    amount_cents INTEGER NOT NULL,
+    method TEXT NOT NULL DEFAULT 'cash',
+    note TEXT NOT NULL DEFAULT '',
+    staff_name TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    deleted_at INTEGER
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS expenses_client_id ON expenses (client_id)",
+  "CREATE INDEX IF NOT EXISTS expenses_day ON expenses (day)",
 ];
 
 // Columns added to tables after they first shipped: [table, column, definition].
 export const ADDED_COLUMNS: [string, string, string][] = [
   // Count this product's stock (off for services and things not counted).
   ["products", "track_stock", "INTEGER NOT NULL DEFAULT 1"],
+  // The customer a sale was for (and their name then, for the records).
+  ["sales", "customer_id", "INTEGER"],
+  ["sales", "customer_name", "TEXT NOT NULL DEFAULT ''"],
+  // Made on the till while offline and sent later.
+  ["sales", "offline", "INTEGER NOT NULL DEFAULT 0"],
 ];
 
 async function addMissingColumns(client: Client): Promise<void> {
@@ -181,4 +293,6 @@ async function addMissingColumns(client: Client): Promise<void> {
 export async function setUp(client: Client): Promise<void> {
   await client.batch(SCHEMA, "write");
   await addMissingColumns(client);
+  // Indexes on added columns, once the columns exist.
+  await client.execute("CREATE INDEX IF NOT EXISTS sales_customer ON sales (customer_id)");
 }

@@ -16,6 +16,7 @@ import { useShop } from "./shop-provider";
 import { useTheme, type ThemeChoice } from "./theme";
 import { TimeZoneCard } from "./time-zone-card";
 import { SellingCard } from "./selling-card";
+import { BackupCard } from "./backup-card";
 import type { SalesSettings } from "@/lib/sale";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -142,6 +143,7 @@ export function SettingsScreen({ viewer, shop, selling }: { viewer: Viewer; shop
             </CardContent>
           </Card>
 
+          {viewer.isOwner && <BackupCard />}
           {(viewer.kind === "owner" || viewer.unlocked) && (
             <Card>
               <CardHeader>

@@ -21,12 +21,16 @@ Turkish, in light and dark mode.
 | Dashboard, Settings (theme, language, shop details from Ariloo) | Done |
 | Products with variants (size, colour…), categories, barcodes, label printing | Done |
 | Till: scanner, cart, discounts, mixed payments, tax, receipts; sales by day with reprint and void | Done |
-| Returns, camera scanning, customers on the till | Next |
+| Returns and refunds | Done |
+| Camera barcode scanning | Done |
+| Customers: list, history, picked at the till, on receipts | Done |
 | Stock levels and quick adjustments | Done |
-| Purchases, suppliers, stock counts, low-stock alerts | Planned |
-| Customers, expenses, invoices | Planned |
-| Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
-| Reports, backups | Planned |
+| Purchases and suppliers | Done |
+| Stock counts, low-stock alerts | Planned |
+| Expenses | Done |
+| A4 invoices | Done |
+| Offline: installable app, saved screens, outbox for sales and expenses | Done |
+| Reports and backups | Done |
 
 ## Stack
 
@@ -137,6 +141,13 @@ Set these in the Vercel project (Production). Never commit them.
   barcode or SKU belongs to one live variant at a time (enforced by the
   database). On the products list, a scan anywhere on the page searches for
   that code (`components/use-scanner.ts`).
+- **Camera scanning** (`components/camera-scanner.tsx`): on phones and
+  tablets without a scanner, the camera button reads barcodes with the
+  browser's BarcodeDetector where it exists (Chrome on Android and
+  computers) and otherwise with ZXing (`@zxing/browser`, loaded only when
+  the camera opens; Safari and iPhones). On the till it stays open and
+  adds every scan to the cart, with a beep; in a barcode field or search
+  it closes after one code.
 - **Labels**: "Print labels" opens a print window with Code 128 / EAN
   barcodes (bwip-js), the name, the variant and optionally the price, for
   50 × 30 mm or 38 × 25 mm label printers or A4 sheets (3 × 8).
@@ -174,11 +185,78 @@ Set these in the Vercel project (Production). Never commit them.
 - **Sales** lists each day's sales (in the shop's time zone) with totals by
   payment method; any sale can be reprinted, and the owner can void one
   (it stays in the records, and its items go back into stock).
+- **Returns** (owner, or the owner password entered on the device): from a
+  sale in Sales, give back some or all of its items. The refund is each
+  item's share of what the customer paid (`refundFor` in `lib/sale.ts`), so
+  sale discounts and added tax are refunded in proportion; returning the
+  last of a line refunds exactly what is left of it. The refund is paid by
+  cash, card or transfer and subtracted from that day's takings; counted
+  items go back into stock; a return slip can be printed. A sale with
+  returns can't be voided (return the rest instead).
+- **Customers**: a list searched by name or phone (kept as digits, so
+  "0750 123 4567" and "07501234567" are one person, and a phone belongs to
+  one customer). At the till, "Add a customer" finds one or adds one with
+  just a name and phone; the sale and receipt carry their name. Each
+  customer's page shows their purchases, visits and total spent (less
+  refunds). Deleting a customer hides them; past sales keep the name.
+- **Purchases** (Purchases section, with a Suppliers tab): scan, search or
+  pick what came in, with quantity and cost each, the supplier and their
+  invoice number. Receiving puts counted items into stock and (by default)
+  sets each item's cost price to what was paid, so profit stays right. The
+  owner can cancel a purchase entered by mistake; its stock goes back out.
+- **Expenses**: the shop's own expense types (it starts with none), and
+  expenses with a date, amount, type, payment method and note, listed by
+  month with totals per type. Staff with the section can add expenses; only
+  the owner can delete one (kept in the database, gone from the books).
+- **Invoices**: any sale prints as an A4 invoice from Sales (shop name and
+  the receipt's top text, the customer's name, phone and address, an item
+  table, totals with tax, payments, and the receipt's bottom text).
 - **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
   sale, void, and later purchase and return); the level is their sum.
   Products can be set not to count stock (services). The product editor
   shows each variant's level, with a quick "Adjust" (set a count, add,
   remove).
+
+## Reports and backups
+
+- **Reports** (`lib/reportsDb.ts`, worked out in SQL so a whole year stays
+  fast): for today, yesterday, the last 7 days, this or last month, this
+  year, or chosen dates. Net sales (sales less refunds given in the period),
+  tax collected (not income), cost of goods sold (each line's cost at the
+  time of sale, less returned items), gross profit and margin, expenses,
+  net profit, average sale; net sales per day as a chart; top products,
+  sales by category, payment method (after change and refunds) and
+  person; expenses by type; stock value at cost and at selling price; and
+  items at or below their low-stock level. Voided sales never count. The
+  daily figures can be downloaded as CSV, and the page prints.
+- **Backup** (Settings, owner): one JSON file with every table of the
+  shop's data. The server sends it a table and 2,000 rows at a time
+  (`/api/backup`) and the browser builds the file, so no response gets too
+  big. Sign-in secrets and staff password hashes are left out.
+
+## Offline
+
+- **Installable**: `/<shop>/manifest.webmanifest` carries the shop's name and
+  opens at its till; icons are in `public/`.
+- **Service worker** (`public/sw.js`, registered by
+  `components/offline-sync.tsx`): page loads are network first, else the
+  copy saved on the device, else `public/offline.html`; app files
+  (`/_next/static`) are cache first; data reads (`GET /api/…`) are network
+  first, else the last copy. While online, every screen the login can open
+  is saved, with the app files it needs, so it opens offline even if it was
+  never visited. Signing out tells the worker to forget saved screens and
+  data, so the next person on a shared till can't see them. Bump `VERSION`
+  in `sw.js` to drop everything an older worker saved.
+- **Outbox** (`lib/outbox.ts`, IndexedDB via Dexie, per shop): a sale or
+  expense made without a connection is kept on the device with its
+  `clientId` and sent in order when the connection is back (on reconnect,
+  every 30 seconds and when the app opens). The header shows how many are
+  waiting; anything the server refuses is listed with its reason.
+- **Offline sales** are sent with `offline: true`: the customer has paid and
+  left, so the server still prices them from the database but records them
+  even if a price changed or stock shows zero since, keeps the payments as
+  taken, and marks them "Offline" in Sales. The receipt printed offline says
+  "Offline sale" (the number comes when it is sent).
 
 ## Conventions
 

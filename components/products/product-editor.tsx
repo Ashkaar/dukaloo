@@ -34,6 +34,7 @@ import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 import { LabelsDialog } from "./labels-dialog";
 import { StockDialog } from "./stock-dialog";
+import { CameraScannerButton } from "../camera-scanner";
 
 interface Draft {
   // A stable key for React, also for variants not saved yet.
@@ -527,9 +528,12 @@ function BarcodeField({
         />
       </div>
       {!value && (
-        <Button type="button" variant="outline" size="icon" onClick={onMake} aria-label={t.products.generate} title={t.products.generate}>
-          <WandSparklesIcon />
-        </Button>
+        <>
+          <CameraScannerButton onScan={(code) => onChange(code.slice(0, LIMITS.barcode))} />
+          <Button type="button" variant="outline" size="icon" onClick={onMake} aria-label={t.products.generate} title={t.products.generate}>
+            <WandSparklesIcon />
+          </Button>
+        </>
       )}
     </div>
   );

@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     const result = await createSale(data, settings, profile.decimals, { id: viewer.staffId, name: viewer.name });
     if (result.ok) return ok({ sale: result.sale }, 201);
     if (result.reason === "unavailable") return badRequest(t.unavailable(result.name));
+    if (result.reason === "customer") return badRequest((await getMessages()).customers.gone);
     if (result.reason === "stock") return NextResponse.json({ error: t.outOfStock(result.name) }, { status: 409 });
     if (result.reason === "changed") {
       return NextResponse.json({ error: t.pricesChanged(formatMoney(result.totalCents, profile)) }, { status: 409 });

@@ -33,7 +33,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description: "Dukaloo: point of sale and shop management",
+    // Installable on a till, tablet or phone, and usable offline (public/sw.js).
+    manifest: `${await shopBase()}/manifest.webmanifest`,
     appleWebApp: { capable: true, title, statusBarStyle: "default" },
+    icons: { apple: "/apple-touch-icon.png" },
   };
 }
 

@@ -34,6 +34,8 @@ export function UserMenu({ viewer, compact = false, className }: { viewer: Viewe
 
   const signOut = async () => {
     try {
+      // Saved screens and data belong to this login: forget them on a shared till.
+      navigator.serviceWorker?.controller?.postMessage({ type: "forget" });
       await sendJson("/api/auth/logout", "POST");
     } finally {
       window.location.assign(shop.href("/login"));

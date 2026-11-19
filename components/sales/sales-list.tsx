@@ -1,6 +1,6 @@
 "use client";
 
-import { BanknoteIcon, ChevronLeftIcon, ChevronRightIcon, CreditCardIcon, PrinterIcon, ReceiptTextIcon, SmartphoneIcon, XCircleIcon } from "lucide-react";
+import { BanknoteIcon, ChevronLeftIcon, FileTextIcon, ChevronRightIcon, CreditCardIcon, PrinterIcon, ReceiptTextIcon, SmartphoneIcon, Undo2Icon, XCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { errorMessage, getJson, sendJson } from "@/lib/clientApi";
@@ -16,12 +16,13 @@ import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
-import { printReceipt } from "./print-receipt";
+import { printInvoice, printReceipt, printReturnSlip } from "./print-receipt";
+import { ReturnDialog } from "./return-dialog";
 
 export interface DayOfSales {
   day: string;
   sales: SaleSummary[];
-  totals: { count: number; totalCents: number; byMethod: Record<PaymentMethod, number> };
+  totals: { count: number; totalCents: number; refundCents: number; byMethod: Record<PaymentMethod, number> };
 }
 
 const ICONS: Record<PaymentMethod, typeof BanknoteIcon> = { cash: BanknoteIcon, card: CreditCardIcon, transfer: SmartphoneIcon };
@@ -79,7 +80,12 @@ export function SalesList({ first, today, settings, canVoid }: { first: DayOfSal
       </PageHeader>
 
       <div className={cn("grid grid-cols-2 gap-3 lg:grid-cols-5", loading && "opacity-60")}>
-        <Stat label={t.sales.total} value={money(data.totals.totalCents)} strong />
+        <Stat
+          label={t.sales.total}
+          value={money(data.totals.totalCents)}
+          strong
+          note={data.totals.refundCents > 0 ? t.returns.refundsToday(money(data.totals.refundCents)) : undefined}
+        />
         <Stat label={t.sales.countLabel} value={String(data.totals.count)} />
         {(["cash", "card", "transfer"] as const).map((m) => {
           const Icon = ICONS[m];
@@ -101,6 +107,8 @@ export function SalesList({ first, today, settings, canVoid }: { first: DayOfSal
                 <p className="flex items-center gap-2 font-semibold">
                   #{s.number}
                   {s.status === "voided" && <Badge variant="destructive">{t.sales.voided}</Badge>}
+                  {s.refundedCents > 0 && <Badge variant="accent">{t.returns.returned}</Badge>}
+                  {s.offline && <Badge variant="neutral">{t.offline.badge}</Badge>}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {[t.sales.items(s.itemCount), s.staffName || t.header.owner, s.methods.map((m) => t.till.methods[m]).join(" + ")].join(" · ")}
@@ -118,6 +126,8 @@ export function SalesList({ first, today, settings, canVoid }: { first: DayOfSal
           canVoid={canVoid}
           onClose={() => setOpen(null)}
           onPrint={(sale) => printReceipt(sale, { ...i18n, shopName: shop.name, branch: shop.branch, settings })}
+          onPrintInvoice={(sale) => printInvoice(sale, { ...i18n, shopName: shop.name, branch: shop.branch, settings })}
+          onPrintReturn={(sale, ret) => printReturnSlip(sale, ret, { ...i18n, shopName: shop.name, branch: shop.branch, settings })}
           onVoided={(sale) => {
             setOpen(sale);
             load(data.day);
@@ -128,7 +138,7 @@ export function SalesList({ first, today, settings, canVoid }: { first: DayOfSal
   );
 }
 
-function Stat({ label, value, strong = false, icon }: { label: string; value: string; strong?: boolean; icon?: React.ReactNode }) {
+function Stat({ label, value, strong = false, icon, note }: { label: string; value: string; strong?: boolean; icon?: React.ReactNode; note?: string }) {
   return (
     <Card className="px-4 py-3">
       <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -136,13 +146,32 @@ function Stat({ label, value, strong = false, icon }: { label: string; value: st
         {label}
       </p>
       <p className={cn("tabular mt-1 truncate font-bold", strong ? "text-2xl" : "text-lg")}>{value}</p>
+      {note && <p className="truncate text-xs text-accent-700 dark:text-accent-400">{note}</p>}
     </Card>
   );
 }
 
-function SaleDialog({ sale, canVoid, onClose, onPrint, onVoided }: { sale: Sale; canVoid: boolean; onClose: () => void; onPrint: (s: Sale) => void; onVoided: (s: Sale) => void }) {
+function SaleDialog({
+  sale,
+  canVoid,
+  onClose,
+  onPrint,
+  onPrintInvoice,
+  onPrintReturn,
+  onVoided,
+}: {
+  sale: Sale;
+  canVoid: boolean;
+  onClose: () => void;
+  onPrint: (s: Sale) => void;
+  onPrintInvoice: (s: Sale) => void;
+  onPrintReturn: (s: Sale, r: Sale["returns"][number]) => void;
+  onVoided: (s: Sale) => void;
+}) {
   const { t, money, quantity, dateTime } = useI18n();
   const [voiding, setVoiding] = useState(false);
+  const [returning, setReturning] = useState(false);
+  const canReturn = canVoid && sale.status === "done" && sale.lines.some((l) => l.qtyMilli > l.returnedMilli);
   const rate = `${sale.taxRateBp / 100}%`;
 
   const doVoid = async () => {
@@ -162,7 +191,7 @@ function SaleDialog({ sale, canVoid, onClose, onPrint, onVoided }: { sale: Sale;
               {sale.status === "voided" && <Badge variant="destructive">{t.sales.voided}</Badge>}
             </DialogTitle>
             <DialogDescription>
-              {dateTime(sale.at)} · {sale.staffName || t.header.owner}
+              {[dateTime(sale.at), sale.staffName || t.header.owner, sale.customerName].filter(Boolean).join(" · ")}
             </DialogDescription>
           </DialogHeader>
           <ul className="divide-y divide-border rounded-lg border border-border text-sm">
@@ -192,22 +221,64 @@ function SaleDialog({ sale, canVoid, onClose, onPrint, onVoided }: { sale: Sale;
             {sale.changeCents > 0 && <Line label={t.receipt.change} value={money(sale.changeCents)} />}
             {sale.note && <p className="pt-2 text-muted-foreground">{sale.note}</p>}
           </div>
+          {sale.returns.length > 0 && (
+            <div className="space-y-2 rounded-lg border border-accent-200 bg-accent-50 p-3 text-sm dark:border-accent-500/30 dark:bg-accent-500/10">
+              {sale.returns.map((r) => (
+                <div key={r.id} className="flex items-center justify-between gap-2">
+                  <span>
+                    <span className="font-semibold">{t.returns.returnedOn(dateTime(r.at))}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {[t.till.methods[r.method], r.staffName || t.header.owner, r.note].filter(Boolean).join(" · ")}
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="tabular font-bold">-{money(r.refundCents)}</span>
+                    <Button variant="ghost" size="icon-sm" aria-label={t.returns.printSlip} onClick={() => onPrintReturn(sale, r)}>
+                      <PrinterIcon />
+                    </Button>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           <DialogFooter className="sm:justify-between">
-            {canVoid && sale.status === "done" ? (
-              <Button variant="destructive-ghost" onClick={() => setVoiding(true)}>
-                <XCircleIcon />
-                {t.sales.void}
+            <div className="flex flex-wrap gap-2">
+              {canVoid && sale.status === "done" && sale.returns.length === 0 && (
+                <Button variant="destructive-ghost" onClick={() => setVoiding(true)}>
+                  <XCircleIcon />
+                  {t.sales.void}
+                </Button>
+              )}
+              {canReturn && (
+                <Button variant="outline" onClick={() => setReturning(true)}>
+                  <Undo2Icon />
+                  {t.returns.button}
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => onPrintInvoice(sale)}>
+                <FileTextIcon />
+                {t.invoice.print}
               </Button>
-            ) : (
-              <span />
-            )}
-            <Button variant="outline" onClick={() => onPrint(sale)}>
-              <PrinterIcon />
-              {t.till.print}
-            </Button>
+              <Button variant="outline" onClick={() => onPrint(sale)}>
+                <PrinterIcon />
+                {t.till.print}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {returning && (
+        <ReturnDialog
+          sale={sale}
+          onClose={() => setReturning(false)}
+          onDone={(updated) => {
+            setReturning(false);
+            onVoided(updated);
+          }}
+        />
+      )}
       <ConfirmDialog
         open={voiding}
         onOpenChange={setVoiding}

@@ -70,3 +70,17 @@ describe("settings and input", () => {
     expect(newSaleSchema.safeParse({ ...ok, clientId: "x" }).success).toBe(false);
   });
 });
+
+describe("refundFor", () => {
+  it("refunds a line's share of what was paid", async () => {
+    const { refundFor } = await import("@/lib/sale");
+    // 2 items at 1,000 and 1 at 2,000; 10% off the sale; total 3,600.
+    const sale = { subtotalCents: 400000, totalCents: 360000 };
+    expect(refundFor(sale, { qtyMilli: 2000, totalCents: 200000 }, 1000, 0)).toBe(90000);
+    expect(refundFor(sale, { qtyMilli: 1000, totalCents: 200000 }, 1000, 0)).toBe(180000);
+    // Tax added at the till is refunded too: 100 + 15%.
+    expect(refundFor({ subtotalCents: 10000, totalCents: 11500 }, { qtyMilli: 1000, totalCents: 10000 }, 1000, 2)).toBe(11500);
+    // Never more than the line.
+    expect(refundFor(sale, { qtyMilli: 1000, totalCents: 200000 }, 5000, 0)).toBe(180000);
+  });
+});

@@ -165,6 +165,10 @@ export const sales = sqliteTable(
     note: text("note").notNull().default(""),
     voidedAt: integer("voided_at"),
     voidedBy: text("voided_by").notNull().default(""),
+    // Added later (ADDED_COLUMNS).
+    customerId: integer("customer_id"),
+    customerName: text("customer_name").notNull().default(""),
+    offline: integer("offline").notNull().default(0),
   },
   (t) => [uniqueIndex("sales_client_id").on(t.clientId), uniqueIndex("sales_number").on(t.number), index("sales_at").on(t.at)],
 );
@@ -197,4 +201,138 @@ export const salePayments = sqliteTable(
     amountCents: integer("amount_cents").notNull(),
   },
   (t) => [index("sale_payments_sale").on(t.saleId)],
+);
+
+// ---- Returns --------------------------------------------------------------
+
+export const saleReturns = sqliteTable(
+  "sale_returns",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    saleId: integer("sale_id").notNull(),
+    clientId: text("client_id").notNull(),
+    at: integer("at").notNull(),
+    staffName: text("staff_name").notNull().default(""),
+    refundCents: integer("refund_cents").notNull(),
+    method: text("method").notNull(),
+    note: text("note").notNull().default(""),
+  },
+  (t) => [uniqueIndex("sale_returns_client_id").on(t.clientId), index("sale_returns_sale").on(t.saleId), index("sale_returns_at").on(t.at)],
+);
+
+export const saleReturnLines = sqliteTable(
+  "sale_return_lines",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    returnId: integer("return_id").notNull(),
+    saleLineId: integer("sale_line_id").notNull(),
+    variantId: integer("variant_id").notNull(),
+    qtyMilli: integer("qty_milli").notNull(),
+    refundCents: integer("refund_cents").notNull(),
+  },
+  (t) => [index("sale_return_lines_return").on(t.returnId), index("sale_return_lines_line").on(t.saleLineId)],
+);
+
+// ---- Customers ------------------------------------------------------------
+
+export const customers = sqliteTable(
+  "customers",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    phone: text("phone").notNull().default(""),
+    email: text("email").notNull().default(""),
+    address: text("address").notNull().default(""),
+    note: text("note").notNull().default(""),
+    createdAt: integer("created_at").notNull(),
+    archivedAt: integer("archived_at"),
+  },
+  (t) => [index("customers_name").on(sql`${t.name} COLLATE NOCASE`), uniqueIndex("customers_phone").on(t.phone).where(sql`${t.phone} <> '' AND ${t.archivedAt} IS NULL`)],
+);
+
+// ---- Suppliers and purchases ---------------------------------------------
+
+export const suppliers = sqliteTable(
+  "suppliers",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    phone: text("phone").notNull().default(""),
+    email: text("email").notNull().default(""),
+    address: text("address").notNull().default(""),
+    note: text("note").notNull().default(""),
+    createdAt: integer("created_at").notNull(),
+    archivedAt: integer("archived_at"),
+  },
+  (t) => [index("suppliers_name").on(sql`${t.name} COLLATE NOCASE`)],
+);
+
+export const purchases = sqliteTable(
+  "purchases",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    number: integer("number").notNull(),
+    clientId: text("client_id").notNull(),
+    at: integer("at").notNull(),
+    supplierId: integer("supplier_id"),
+    supplierName: text("supplier_name").notNull().default(""),
+    reference: text("reference").notNull().default(""),
+    note: text("note").notNull().default(""),
+    totalCents: integer("total_cents").notNull(),
+    staffName: text("staff_name").notNull().default(""),
+    status: text("status").notNull().default("received"),
+    cancelledAt: integer("cancelled_at"),
+    cancelledBy: text("cancelled_by").notNull().default(""),
+  },
+  (t) => [
+    uniqueIndex("purchases_client_id").on(t.clientId),
+    uniqueIndex("purchases_number").on(t.number),
+    index("purchases_at").on(t.at),
+    index("purchases_supplier").on(t.supplierId),
+  ],
+);
+
+export const purchaseLines = sqliteTable(
+  "purchase_lines",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    purchaseId: integer("purchase_id").notNull(),
+    variantId: integer("variant_id").notNull(),
+    productId: integer("product_id").notNull(),
+    name: text("name").notNull(),
+    variantLabel: text("variant_label").notNull().default(""),
+    qtyMilli: integer("qty_milli").notNull(),
+    unitCostCents: integer("unit_cost_cents").notNull(),
+    totalCents: integer("total_cents").notNull(),
+  },
+  (t) => [index("purchase_lines_purchase").on(t.purchaseId), index("purchase_lines_variant").on(t.variantId)],
+);
+
+// ---- Expenses -------------------------------------------------------------
+
+export const expenseTypes = sqliteTable(
+  "expense_types",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [uniqueIndex("expense_types_name").on(sql`${t.name} COLLATE NOCASE`)],
+);
+
+export const expenses = sqliteTable(
+  "expenses",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    clientId: text("client_id").notNull(),
+    day: text("day").notNull(),
+    typeId: integer("type_id"),
+    amountCents: integer("amount_cents").notNull(),
+    method: text("method").notNull().default("cash"),
+    note: text("note").notNull().default(""),
+    staffName: text("staff_name").notNull().default(""),
+    createdAt: integer("created_at").notNull(),
+    deletedAt: integer("deleted_at"),
+  },
+  (t) => [uniqueIndex("expenses_client_id").on(t.clientId), index("expenses_day").on(t.day)],
 );

@@ -61,5 +61,7 @@ OFF on purpose: every page depends on the shop and the signed-in user.
 - Translations: `lib/i18n/en.ts` is the source; `ku`, `ar`, `tr` are typed
   from it, so a missing key fails the build. Keep "Dukaloo" and "Ariloo" in
   Latin letters in every language.
+- Offline: anything a till records must carry a `clientId` and be safe to
+  send twice. Bump `VERSION` in `public/sw.js` when its caching changes.
 - Never write to Ariloo's database. If Dukaloo needs a new column or setting
   from Ariloo, say so; that change is made in the Ariloo project.

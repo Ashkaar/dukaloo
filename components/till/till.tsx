@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgePercentIcon, MinusIcon, PackageIcon, PlusIcon, ScanBarcodeIcon, SearchIcon, ShoppingCartIcon, Trash2Icon, XIcon } from "lucide-react";
+import { BadgePercentIcon, ContactRoundIcon, MinusIcon, PackageIcon, PlusIcon, ScanBarcodeIcon, SearchIcon, ShoppingCartIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DECIMAL_UNITS, type Category, type Unit } from "@/lib/catalog";
@@ -18,7 +18,9 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Sheet, SheetContent, SheetTitle } from "../ui/sheet";
 import { useScanner } from "../use-scanner";
-import { PayDialog } from "./pay-dialog";
+import { CameraScannerButton } from "../camera-scanner";
+import { CustomerPicker, type PickedCustomer } from "./customer-picker";
+import { PayDialog, type NewSaleBody } from "./pay-dialog";
 import { ReceiptDialog } from "./receipt-dialog";
 
 export interface CartLine {
@@ -28,6 +30,8 @@ export interface CartLine {
 }
 
 const ALL = 0;
+// The time of an offline sale (outside the component: only called on payment).
+const now = () => Date.now();
 
 export function Till({ initialItems, initialSettings, categories }: { initialItems: TillItem[]; initialSettings: SalesSettings; categories: Category[] }) {
   const { t, money, quantity } = useI18n();
@@ -36,6 +40,8 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
   const [settings, setSettings] = useState(initialSettings);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [discount, setDiscount] = useState<SaleDiscount | null>(null);
+  const [customer, setCustomer] = useState<PickedCustomer | null>(null);
+  const [picking, setPicking] = useState(false);
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<number>(ALL);
   const [editing, setEditing] = useState<number | null>(null);
@@ -100,7 +106,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
 
   useScanner((code) => {
     if (!addByCode(code)) toast.error(t.till.notFound(code));
-  }, !paying && !done && editing === null && !discounting);
+  }, !paying && !done && editing === null && !discounting && !picking);
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -123,6 +129,7 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
   const clear = () => {
     setCart([]);
     setDiscount(null);
+    setCustomer(null);
   };
 
   const finished = (sale: Sale) => {
@@ -137,6 +144,51 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
     setPaying(false);
     setCartOpen(false);
     setDone(sale);
+  };
+
+  // A sale kept on this device while offline: a receipt from the till's own
+  // figures (marked as offline, without a number until it is sent).
+  const finishedOffline = (body: NewSaleBody) => {
+    const paid = body.payments.reduce((s, p) => s + p.cents, 0);
+    const sale: Sale = {
+      id: 0,
+      number: 0,
+      at: now(),
+      staffName: "",
+      customerId: customer?.id ?? null,
+      customerName: customer?.name ?? "",
+      customerPhone: "",
+      customerAddress: "",
+      offline: true,
+      status: "done",
+      subtotalCents: totals.subtotalCents,
+      discountCents: totals.discountCents,
+      taxCents: totals.taxCents,
+      taxName: settings.tax.enabled ? settings.tax.name : "",
+      taxRateBp: settings.tax.enabled ? settings.tax.rateBp : 0,
+      taxInclusive: settings.tax.inclusive,
+      totalCents: totals.totalCents,
+      paidCents: paid,
+      changeCents: Math.max(0, paid - totals.totalCents),
+      note: body.note,
+      lines: priced.map(({ line, item }, i) => ({
+        id: 0,
+        variantId: line.variantId,
+        name: item?.name ?? "",
+        variantLabel: item?.variantLabel ?? "",
+        unit: item?.unit ?? "piece",
+        qtyMilli: line.qtyMilli,
+        unitPriceCents: item?.priceCents ?? 0,
+        discountCents: totals.lines[i].discountCents,
+        totalCents: totals.lines[i].netCents,
+        returnedMilli: 0,
+      })),
+      payments: body.payments,
+      returns: [],
+      refundedCents: 0,
+    };
+    toast.message(t.offline.savedOffline);
+    finished(sale);
   };
 
   const failed = (err: unknown) => {
@@ -204,6 +256,14 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
         )}
       </div>
       <div className="space-y-1.5 border-t border-border px-4 py-3 text-sm">
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          className="mb-1 flex w-full cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-start hover:bg-highlight"
+        >
+          <ContactRoundIcon className="size-4 text-muted-foreground" />
+          <span className={cn("min-w-0 flex-1 truncate", customer ? "font-semibold" : "text-muted-foreground")}>{customer ? customer.name : t.customers.addToSale}</span>
+        </button>
         <Row label={t.till.subtotal} value={money(totals.subtotalCents)} />
         {totals.discountCents > 0 && <Row label={t.till.discount} value={`-${money(totals.discountCents)}`} accent />}
         {settings.tax.enabled && totals.taxCents > 0 && !settings.tax.inclusive && <Row label={`${settings.tax.name} ${rate}`} value={money(totals.taxCents)} />}
@@ -231,7 +291,8 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
     // (cancelling the page padding the app frame adds for it).
     <div className="-mb-24 flex h-[calc(100dvh-3.5rem-4rem)] min-h-0 md:-mb-10 md:h-[calc(100dvh-3rem)]">
       <section className="flex min-w-0 flex-1 flex-col gap-3 px-4 pt-2 pb-24 md:px-6 lg:pb-4">
-        <div className="relative">
+        <div className="flex gap-2">
+        <div className="relative flex-1">
           <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             ref={searchRef}
@@ -253,6 +314,14 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
             aria-label={t.till.search}
             className="h-12 ps-9 text-base"
             maxLength={100}
+          />
+        </div>
+          <CameraScannerButton
+            continuous
+            className="size-12"
+            onScan={(code) => {
+              if (!addByCode(code)) toast.error(t.till.notFound(code));
+            }}
           />
         </div>
         {categories.length > 0 && (
@@ -359,7 +428,17 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
           }}
         />
       )}
-      {paying && <PayDialog cart={cart} discount={discount} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} />}
+      {picking && (
+        <CustomerPicker
+          current={customer}
+          onClose={() => setPicking(false)}
+          onPick={(c) => {
+            setCustomer(c);
+            setPicking(false);
+          }}
+        />
+      )}
+      {paying && <PayDialog cart={cart} discount={discount} customerId={customer?.id ?? null} totalCents={totals.totalCents} onClose={() => setPaying(false)} onDone={finished} onError={failed} onOffline={finishedOffline} />}
       {done && <ReceiptDialog sale={done} settings={settings} onClose={() => setDone(null)} />}
     </div>
   );

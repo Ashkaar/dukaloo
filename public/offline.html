@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline · Dukaloo</title>
+    <style>
+      :root { color-scheme: light dark; --bg: #f8fafc; --card: #fff; --fg: #0f172a; --muted: #64748b; --brand: #0f6b63; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #0b0f14; --card: #151b23; --fg: #e5e7eb; --muted: #94a3b8; --brand: #2aa596; } }
+      body { margin: 0; min-height: 100dvh; display: grid; place-items: center; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, "Segoe UI", Tahoma, sans-serif; padding: 16px; box-sizing: border-box; }
+      main { max-width: 420px; width: 100%; background: var(--card); border-radius: 12px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,.08); text-align: center; }
+      h1 { font-size: 20px; margin: 12px 0 4px; }
+      p { margin: 6px 0; color: var(--muted); }
+      [dir="rtl"] { font-family: Tahoma, system-ui, sans-serif; }
+      button { margin-top: 18px; height: 42px; padding: 0 20px; border: 0; border-radius: 8px; background: var(--brand); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h.01"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/><path d="M5 12.86a10 10 0 0 1 5.17-2.69"/><path d="M19 12.86a10 10 0 0 0-2-1.43"/><path d="M2 8.82a15 15 0 0 1 4.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="m2 2 20 20"/></svg>
+      <h1>You're offline</h1>
+      <p>This screen wasn't saved on this device yet. The till keeps working for screens you've opened before.</p>
+      <p dir="rtl" lang="ckb">ئێستا دەرهێڵیت. ئەم شاشەیە هێشتا لەسەر ئەم ئامێرە پاشەکەوت نەکراوە.</p>
+      <p dir="rtl" lang="ar">أنت غير متصل. لم تُحفظ هذه الشاشة على هذا الجهاز بعد.</p>
+      <p lang="tr">Çevrimdışısınız. Bu ekran bu cihaza henüz kaydedilmedi.</p>
+      <button type="button" onclick="location.reload()">Try again · دووبارە · إعادة · Tekrar</button>
+    </main>
+  </body>
+</html>
