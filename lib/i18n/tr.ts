@@ -70,6 +70,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      invoices: {
+        title: "Faturalar",
+        text: "Herhangi bir satışı mağaza bilgileriniz ve müşterinin adı, telefonu ve adresiyle A4 fatura olarak yazdırın.",
+      },
       reports: {
         title: "Raporlar ve yedekler",
         text: "Herhangi bir dönem için satışları, maliyet ve giderlerden sonra kârı, ödemeleri, en çok satanları, personeli ve stok değerini görün; Ayarlar’dan tüm verilerinizin yedeğini indirin.",
@@ -643,6 +647,20 @@ const tr: Messages = {
     download: "Yedeği indir",
     working: "Hazırlanıyor…",
     done: "Yedek indirildi.",
+  },
+
+  invoice: {
+    print: "A4 fatura",
+    title: "Fatura",
+    number: (n: number) => `Fatura #${n}`,
+    billTo: "Alıcı",
+    walkIn: "Perakende müşteri",
+    item: "Ürün",
+    qty: "Miktar",
+    price: "Fiyat",
+    amount: "Tutar",
+    paid: "Ödenen",
+    refunded: "İade edilen",
   },
 
   errors: {

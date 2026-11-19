@@ -28,7 +28,7 @@ Turkish, in light and dark mode.
 | Purchases and suppliers | Done |
 | Stock counts, low-stock alerts | Planned |
 | Expenses | Done |
-| Invoices | Planned |
+| A4 invoices | Done |
 | Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
 | Reports and backups | Done |
 
@@ -208,6 +208,9 @@ Set these in the Vercel project (Production). Never commit them.
   expenses with a date, amount, type, payment method and note, listed by
   month with totals per type. Staff with the section can add expenses; only
   the owner can delete one (kept in the database, gone from the books).
+- **Invoices**: any sale prints as an A4 invoice from Sales (shop name and
+  the receipt's top text, the customer's name, phone and address, an item
+  table, totals with tax, payments, and the receipt's bottom text).
 - **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
   sale, void, and later purchase and return); the level is their sum.
   Products can be set not to count stock (services). The product editor

@@ -194,6 +194,7 @@ export async function getSale(id: number): Promise<Sale | null> {
   const db = await getDb();
   const [s] = await db.select().from(sales).where(eq(sales.id, id));
   if (!s) return null;
+  const [who] = s.customerId ? await db.select({ phone: customers.phone, address: customers.address }).from(customers).where(eq(customers.id, s.customerId)) : [];
   const [lines, payments, returns] = await Promise.all([
     db.select().from(saleLines).where(eq(saleLines.saleId, id)).orderBy(saleLines.id),
     db.select().from(salePayments).where(eq(salePayments.saleId, id)).orderBy(salePayments.id),
@@ -211,6 +212,8 @@ export async function getSale(id: number): Promise<Sale | null> {
     staffName: s.staffName,
     customerId: s.customerId,
     customerName: s.customerName,
+    customerPhone: who?.phone ?? "",
+    customerAddress: who?.address ?? "",
     status: s.status === "voided" ? "voided" : "done",
     subtotalCents: s.subtotalCents,
     discountCents: s.discountCents,

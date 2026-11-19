@@ -1,6 +1,6 @@
 "use client";
 
-import { BanknoteIcon, ChevronLeftIcon, ChevronRightIcon, CreditCardIcon, PrinterIcon, ReceiptTextIcon, SmartphoneIcon, Undo2Icon, XCircleIcon } from "lucide-react";
+import { BanknoteIcon, ChevronLeftIcon, FileTextIcon, ChevronRightIcon, CreditCardIcon, PrinterIcon, ReceiptTextIcon, SmartphoneIcon, Undo2Icon, XCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { errorMessage, getJson, sendJson } from "@/lib/clientApi";
@@ -16,7 +16,7 @@ import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
-import { printReceipt, printReturnSlip } from "./print-receipt";
+import { printInvoice, printReceipt, printReturnSlip } from "./print-receipt";
 import { ReturnDialog } from "./return-dialog";
 
 export interface DayOfSales {
@@ -125,6 +125,7 @@ export function SalesList({ first, today, settings, canVoid }: { first: DayOfSal
           canVoid={canVoid}
           onClose={() => setOpen(null)}
           onPrint={(sale) => printReceipt(sale, { ...i18n, shopName: shop.name, branch: shop.branch, settings })}
+          onPrintInvoice={(sale) => printInvoice(sale, { ...i18n, shopName: shop.name, branch: shop.branch, settings })}
           onPrintReturn={(sale, ret) => printReturnSlip(sale, ret, { ...i18n, shopName: shop.name, branch: shop.branch, settings })}
           onVoided={(sale) => {
             setOpen(sale);
@@ -154,6 +155,7 @@ function SaleDialog({
   canVoid,
   onClose,
   onPrint,
+  onPrintInvoice,
   onPrintReturn,
   onVoided,
 }: {
@@ -161,6 +163,7 @@ function SaleDialog({
   canVoid: boolean;
   onClose: () => void;
   onPrint: (s: Sale) => void;
+  onPrintInvoice: (s: Sale) => void;
   onPrintReturn: (s: Sale, r: Sale["returns"][number]) => void;
   onVoided: (s: Sale) => void;
 }) {
@@ -252,10 +255,16 @@ function SaleDialog({
                 </Button>
               )}
             </div>
-            <Button variant="outline" onClick={() => onPrint(sale)}>
-              <PrinterIcon />
-              {t.till.print}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => onPrintInvoice(sale)}>
+                <FileTextIcon />
+                {t.invoice.print}
+              </Button>
+              <Button variant="outline" onClick={() => onPrint(sale)}>
+                <PrinterIcon />
+                {t.till.print}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

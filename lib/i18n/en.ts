@@ -74,6 +74,10 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      invoices: {
+        title: "Invoices",
+        text: "Print any sale as an A4 invoice with your shop’s details and the customer’s name, phone and address.",
+      },
       reports: {
         title: "Reports and backups",
         text: "See sales, profit after costs and expenses, payments, top products, staff and stock value for any period, and download a backup of all your data in Settings.",
@@ -647,6 +651,20 @@ const en = {
     download: "Download backup",
     working: "Preparing…",
     done: "Backup downloaded.",
+  },
+
+  invoice: {
+    print: "A4 invoice",
+    title: "Invoice",
+    number: (n: number) => `Invoice #${n}`,
+    billTo: "Bill to",
+    walkIn: "Walk-in customer",
+    item: "Item",
+    qty: "Qty",
+    price: "Price",
+    amount: "Amount",
+    paid: "Paid",
+    refunded: "Refunded",
   },
 
   errors: {

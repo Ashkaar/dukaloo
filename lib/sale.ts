@@ -201,6 +201,9 @@ export interface Sale {
   staffName: string;
   customerId: number | null;
   customerName: string;
+  // The customer's details now (for an invoice), "" without a customer.
+  customerPhone: string;
+  customerAddress: string;
   status: "done" | "voided";
   subtotalCents: number;
   discountCents: number;
