@@ -74,6 +74,10 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      scale: {
+        title: "Items sold by weight",
+        text: "Turn it on in Settings: scan labels printed by your shop scale (weight or price), or read a scale plugged into the till.",
+      },
       credit: {
         title: "Sell on account",
         text: "Turn it on in Settings to let regular customers pay later. See what each customer owes, record their payments, and see the total owed in Reports.",
@@ -711,6 +715,23 @@ const en = {
     payments: "Payments",
     paymentSaved: "Payment recorded.",
     deletePayment: "Delete this payment?",
+  },
+
+  scale: {
+    setting: "Items sold by weight",
+    settingNote: "Read labels printed by a shop scale, and a scale on the till’s USB or serial port.",
+    notInPlan: "Not in your plan. Upgrade on Ariloo to use scales.",
+    weightPrefix: "Weight labels start with",
+    pricePrefix: "Price labels start with",
+    none: "Not used",
+    speed: "Scale speed (baud)",
+    labelHint: "Scale labels are 13 digits: the start above, the item’s 5-digit code (give the item that SKU or barcode, e.g. 00123), then the weight in grams or the price, then a check digit.",
+    test: "Test the scale",
+    testResult: (weight: string) => `The scale reads ${weight}.`,
+    read: "Read scale",
+    reading: "Reading…",
+    noPort: "No scale chosen. Connect it and try again (Chrome or Edge on a computer).",
+    noReading: "No weight from the scale. Check it is on, steady and set to the speed in Settings.",
   },
 
   errors: {

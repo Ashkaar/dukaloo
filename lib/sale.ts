@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { BAUD_RATES, DEFAULT_SCALE, normaliseScale, SCALE_PREFIXES, type ScaleSettings } from "./scale";
+
+const scalePrefixOk = (v: string) => v === "" || (SCALE_PREFIXES as readonly string[]).includes(v);
 
 // Selling: shared types, settings and the ONE function that works out a
 // sale's totals. The till uses it to show the cart; the server uses it to
@@ -26,6 +29,8 @@ export interface SalesSettings {
   // Let a customer take goods now and pay later ("on account"). Off by
   // default; needs a plan with credit sales.
   creditSales: boolean;
+  // Items sold by weight: scale labels and a scale on the till.
+  scale: ScaleSettings;
   tax: {
     enabled: boolean;
     name: string;
@@ -45,6 +50,7 @@ export interface SalesSettings {
 export const DEFAULT_SALES_SETTINGS: SalesSettings = {
   allowNegativeStock: true,
   creditSales: false,
+  scale: DEFAULT_SCALE,
   tax: { enabled: false, name: "VAT", rateBp: 0, inclusive: true },
   receipt: { header: "", footer: "", paper: "80" },
 };
@@ -52,6 +58,15 @@ export const DEFAULT_SALES_SETTINGS: SalesSettings = {
 export const salesSettingsSchema = z.object({
   allowNegativeStock: z.boolean(),
   creditSales: z.boolean().default(false),
+  scale: z
+    .object({
+      enabled: z.boolean(),
+      weightPrefix: z.string().refine(scalePrefixOk),
+      pricePrefix: z.string().refine(scalePrefixOk),
+      baudRate: z.number().int().refine((n) => (BAUD_RATES as readonly number[]).includes(n)),
+    })
+    .refine((v) => !v.weightPrefix || v.weightPrefix !== v.pricePrefix)
+    .default(DEFAULT_SCALE),
   tax: z.object({
     enabled: z.boolean(),
     name: z.string().trim().max(20),
@@ -74,6 +89,7 @@ export function normaliseSalesSettings(raw: unknown): SalesSettings {
   const merged = {
     allowNegativeStock: typeof r.allowNegativeStock === "boolean" ? r.allowNegativeStock : d.allowNegativeStock,
     creditSales: typeof r.creditSales === "boolean" ? r.creditSales : d.creditSales,
+    scale: normaliseScale(r.scale),
     tax: {
       enabled: typeof tax.enabled === "boolean" ? tax.enabled : d.tax.enabled,
       name: typeof tax.name === "string" && tax.name.trim() ? tax.name.trim().slice(0, 20) : d.tax.name,

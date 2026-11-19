@@ -70,6 +70,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      scale: {
+        title: "Tartılı satış",
+        text: "Ayarlar’dan açın: mağaza terazinizin bastığı etiketleri (ağırlık veya fiyat) okutun ya da kasaya bağlı teraziyi okuyun.",
+      },
       credit: {
         title: "Veresiye satış",
         text: "Düzenli müşterilerin sonra ödemesi için Ayarlar’dan açın. Her müşterinin borcunu görün, ödemelerini kaydedin ve toplam borcu Raporlar’da görün.",
@@ -707,6 +711,23 @@ const tr: Messages = {
     payments: "Ödemeler",
     paymentSaved: "Ödeme kaydedildi.",
     deletePayment: "Bu ödeme silinsin mi?",
+  },
+
+  scale: {
+    setting: "Tartılı satış",
+    settingNote: "Mağaza terazisinin bastığı etiketleri ve kasanın USB veya seri portuna bağlı teraziyi okuyun.",
+    notInPlan: "Planınızda yok. Terazi kullanmak için Ariloo’da planınızı yükseltin.",
+    weightPrefix: "Ağırlık etiketlerinin başı",
+    pricePrefix: "Fiyat etiketlerinin başı",
+    none: "Kullanılmıyor",
+    speed: "Terazi hızı (baud)",
+    labelHint: "Terazi etiketleri 13 hanelidir: yukarıdaki baş, ürünün 5 haneli kodu (ürüne bu SKU’yu veya barkodu verin, ör. 00123), sonra gram cinsinden ağırlık veya fiyat, sonra kontrol hanesi.",
+    test: "Teraziyi dene",
+    testResult: (weight: string) => `Terazi ${weight} gösteriyor.`,
+    read: "Teraziyi oku",
+    reading: "Okunuyor…",
+    noPort: "Terazi seçilmedi. Bağlayıp tekrar deneyin (bilgisayarda Chrome veya Edge).",
+    noReading: "Teraziden ağırlık gelmedi. Açık, sabit ve Ayarlar’daki hızda olduğundan emin olun.",
   },
 
   errors: {

@@ -32,7 +32,7 @@ Turkish, in light and dark mode.
 | Offline: installable app, saved screens, outbox for sales and expenses | Done |
 | Reports and backups | Done |
 | Sales on account (optional): customer balances and repayments | Done |
-| Items sold by weight (optional): scale barcodes, USB scales | Planned |
+| Items sold by weight (optional): scale labels, USB/serial scales | Done |
 
 ## Stack
 
@@ -214,6 +214,22 @@ Set these in the Vercel project (Production). Never commit them.
   payment" takes cash, card or transfer (the owner can delete one). Account
   sales are not counted as money in Sales or Reports; repayments are, on the
   day they come in. Reports show what all customers owe.
+- **Items sold by weight** (Settings → Selling, off by default, Pro and up):
+  - *Scale labels*: EAN-13 codes printed by a shop scale, `PP IIIII VVVVV C`:
+    a prefix (one for weight labels, default 21, and one for price labels,
+    default 22; 20 is not offered because Dukaloo's own barcodes use it),
+    the item's 5-digit code, the weight in grams or the price (whole units
+    without decimals, else hundredths), and the check digit. The item code
+    is matched to a variant's SKU or barcode (`00123` or `123`). A weight
+    label adds that weight; a price label adds the quantity that comes to
+    that price. Each label is its own cart line. A product barcode that
+    matches the whole code always wins. Parsing is in `lib/scale.ts`.
+  - *A scale on the till* (USB or serial, Web Serial in Chrome and Edge on
+    computers): "Read scale" in the till's quantity dialog for kg and g
+    items, and "Test the scale" in Settings. The speed (baud) is a setting;
+    the reader takes the last weight in what the scale sends (kg, g or lb;
+    a bare number is kg), and sends `W` if the scale stays quiet
+    (`components/till/scale-reader.ts`).
 - **Purchases** (Purchases section, with a Suppliers tab): scan, search or
   pick what came in, with quantity and cost each, the supplier and their
   invoice number. Receiving puts counted items into stock and (by default)

@@ -115,7 +115,7 @@ export function SettingsScreen({ viewer, shop, selling, features = [] }: { viewe
         </Card>
 
         <div className="space-y-4">
-          <SellingCard initial={selling} canChange={viewer.isOwner} creditInPlan={features.includes("credit")} />
+          <SellingCard initial={selling} canChange={viewer.isOwner} creditInPlan={features.includes("credit")} scaleInPlan={features.includes("scale")} />
           <TimeZoneCard canChange={viewer.isOwner} />
           <Card>
             <CardHeader>
