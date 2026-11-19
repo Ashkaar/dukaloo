@@ -236,6 +236,29 @@ export const SCHEMA: string[] = [
   )`,
   "CREATE INDEX IF NOT EXISTS purchase_lines_purchase ON purchase_lines (purchase_id)",
   "CREATE INDEX IF NOT EXISTS purchase_lines_variant ON purchase_lines (variant_id)",
+
+  // ---- Expenses ----
+  `CREATE TABLE IF NOT EXISTS expense_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS expense_types_name ON expense_types (name COLLATE NOCASE)",
+  // day: the calendar day it belongs to ("YYYY-MM-DD", in the shop's time zone).
+  `CREATE TABLE IF NOT EXISTS expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id TEXT NOT NULL,
+    day TEXT NOT NULL,
+    type_id INTEGER,
+    amount_cents INTEGER NOT NULL,
+    method TEXT NOT NULL DEFAULT 'cash',
+    note TEXT NOT NULL DEFAULT '',
+    staff_name TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    deleted_at INTEGER
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS expenses_client_id ON expenses (client_id)",
+  "CREATE INDEX IF NOT EXISTS expenses_day ON expenses (day)",
 ];
 
 // Columns added to tables after they first shipped: [table, column, definition].

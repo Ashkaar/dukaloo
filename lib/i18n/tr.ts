@@ -26,6 +26,7 @@ const tr: Messages = {
   },
 
   // Month names for dates (built by lib/format.ts, so server and browser agree).
+  monthsLong: ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"],
   months: ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"],
 
   app: {
@@ -39,6 +40,7 @@ const tr: Messages = {
     till: "Kasa",
     sales: "Satışlar",
     products: "Ürünler",
+    expenses: "Giderler",
     purchases: "Alımlar",
     customers: "Müşteriler",
     staff: "Personel",
@@ -67,6 +69,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      expenses: {
+        title: "Giderler",
+        text: "Kira, fatura, maaş ve diğer giderleri türe göre kaydedin ve her ayın toplamını görün. Kâr raporunda hesaba katılır.",
+      },
       purchases: {
         title: "Alımlar ve tedarikçiler",
         text: "Tedarikçilerden gelen stoğu kaydedin: ürünleri okutun, her birinin maliyetini girin; stok ve maliyet fiyatları kendiliğinden güncellenir.",
@@ -543,6 +549,32 @@ const tr: Messages = {
     cancelledToast: "Alım iptal edildi.",
     supplierGone: "Bu tedarikçi artık yok.",
     itemGone: "Ürünlerden biri artık yok. Yenileyip tekrar deneyin.",
+  },
+
+  expenses: {
+    title: "Giderler",
+    intro: "Kira, faturalar, maaşlar ve diğer çıkan para.",
+    add: "Gider ekle",
+    types: "Gider türleri",
+    typesIntro: "Paranın nereye gittiğini görmek için giderleri gruplayın.",
+    newType: "Yeni tür, örn. Kira",
+    noTypes: "Henüz tür yok.",
+    deleteTypeTitle: (name: string) => `${name} silinsin mi?`,
+    deleteTypeText: "Giderleri kalır, türsüz olarak.",
+    previous: "Önceki ay",
+    next: "Sonraki ay",
+    total: "Bu ay",
+    none: "Bu ay gider yok.",
+    noType: "Diğer",
+    amount: "Tutar",
+    day: "Tarih",
+    type: "Tür",
+    paidBy: "Ödeme",
+    note: "Not (isteğe bağlı)",
+    amountNeeded: "Tutarı girin.",
+    deleteTitle: "Bu gider silinsin mi?",
+    typeTaken: "Bu adda bir tür zaten var.",
+    typeGone: "Bu gider türü artık yok.",
   },
 
   errors: {

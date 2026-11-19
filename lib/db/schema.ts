@@ -306,3 +306,32 @@ export const purchaseLines = sqliteTable(
   },
   (t) => [index("purchase_lines_purchase").on(t.purchaseId), index("purchase_lines_variant").on(t.variantId)],
 );
+
+// ---- Expenses -------------------------------------------------------------
+
+export const expenseTypes = sqliteTable(
+  "expense_types",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [uniqueIndex("expense_types_name").on(sql`${t.name} COLLATE NOCASE`)],
+);
+
+export const expenses = sqliteTable(
+  "expenses",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    clientId: text("client_id").notNull(),
+    day: text("day").notNull(),
+    typeId: integer("type_id"),
+    amountCents: integer("amount_cents").notNull(),
+    method: text("method").notNull().default("cash"),
+    note: text("note").notNull().default(""),
+    staffName: text("staff_name").notNull().default(""),
+    createdAt: integer("created_at").notNull(),
+    deletedAt: integer("deleted_at"),
+  },
+  (t) => [uniqueIndex("expenses_client_id").on(t.clientId), index("expenses_day").on(t.day)],
+);

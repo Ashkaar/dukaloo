@@ -27,7 +27,8 @@ Turkish, in light and dark mode.
 | Stock levels and quick adjustments | Done |
 | Purchases and suppliers | Done |
 | Stock counts, low-stock alerts | Planned |
-| Customers, expenses, invoices | Planned |
+| Expenses | Done |
+| Invoices | Planned |
 | Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
 | Reports, backups | Planned |
 
@@ -203,6 +204,10 @@ Set these in the Vercel project (Production). Never commit them.
   invoice number. Receiving puts counted items into stock and (by default)
   sets each item's cost price to what was paid, so profit stays right. The
   owner can cancel a purchase entered by mistake; its stock goes back out.
+- **Expenses**: the shop's own expense types (it starts with none), and
+  expenses with a date, amount, type, payment method and note, listed by
+  month with totals per type. Staff with the section can add expenses; only
+  the owner can delete one (kept in the database, gone from the books).
 - **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
   sale, void, and later purchase and return); the level is their sum.
   Products can be set not to count stock (services). The product editor

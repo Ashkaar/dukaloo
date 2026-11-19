@@ -30,6 +30,7 @@ const en = {
   },
 
   // Month names for dates (built by lib/format.ts, so server and browser agree).
+  monthsLong: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
   months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
 
   app: {
@@ -43,6 +44,7 @@ const en = {
     till: "Till",
     sales: "Sales",
     products: "Products",
+    expenses: "Expenses",
     purchases: "Purchases",
     customers: "Customers",
     staff: "Staff",
@@ -71,6 +73,10 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      expenses: {
+        title: "Expenses",
+        text: "Record rent, bills, wages and other costs by type and see each month’s total. They count in the profit report.",
+      },
       purchases: {
         title: "Purchases and suppliers",
         text: "Record stock coming in from suppliers: scan the items, enter what each cost, and stock and cost prices update by themselves.",
@@ -547,6 +553,32 @@ const en = {
     cancelledToast: "Purchase cancelled.",
     supplierGone: "That supplier no longer exists.",
     itemGone: "One of the items no longer exists. Reload and try again.",
+  },
+
+  expenses: {
+    title: "Expenses",
+    intro: "Rent, bills, wages and other money going out.",
+    add: "Add expense",
+    types: "Expense types",
+    typesIntro: "Group expenses so you can see where money goes.",
+    newType: "New type, e.g. Rent",
+    noTypes: "No types yet.",
+    deleteTypeTitle: (name: string) => `Delete ${name}?`,
+    deleteTypeText: "Its expenses stay, without a type.",
+    previous: "Previous month",
+    next: "Next month",
+    total: "This month",
+    none: "No expenses this month.",
+    noType: "Other",
+    amount: "Amount",
+    day: "Date",
+    type: "Type",
+    paidBy: "Paid by",
+    note: "Note (optional)",
+    amountNeeded: "Enter the amount.",
+    deleteTitle: "Delete this expense?",
+    typeTaken: "There’s already a type with that name.",
+    typeGone: "That expense type no longer exists.",
   },
 
   errors: {
