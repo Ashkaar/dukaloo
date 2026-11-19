@@ -30,7 +30,7 @@ Turkish, in light and dark mode.
 | Expenses | Done |
 | Invoices | Planned |
 | Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
-| Reports, backups | Planned |
+| Reports and backups | Done |
 
 ## Stack
 
@@ -213,6 +213,23 @@ Set these in the Vercel project (Production). Never commit them.
   Products can be set not to count stock (services). The product editor
   shows each variant's level, with a quick "Adjust" (set a count, add,
   remove).
+
+## Reports and backups
+
+- **Reports** (`lib/reportsDb.ts`, worked out in SQL so a whole year stays
+  fast): for today, yesterday, the last 7 days, this or last month, this
+  year, or chosen dates. Net sales (sales less refunds given in the period),
+  tax collected (not income), cost of goods sold (each line's cost at the
+  time of sale, less returned items), gross profit and margin, expenses,
+  net profit, average sale; net sales per day as a chart; top products,
+  sales by category, payment method (after change and refunds) and
+  person; expenses by type; stock value at cost and at selling price; and
+  items at or below their low-stock level. Voided sales never count. The
+  daily figures can be downloaded as CSV, and the page prints.
+- **Backup** (Settings, owner): one JSON file with every table of the
+  shop's data. The server sends it a table and 2,000 rows at a time
+  (`/api/backup`) and the browser builds the file, so no response gets too
+  big. Sign-in secrets and staff password hashes are left out.
 
 ## Conventions
 

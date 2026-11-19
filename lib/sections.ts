@@ -4,7 +4,7 @@
 //
 // A section is added here when its screens ship.
 
-export const SECTIONS = ["dashboard", "till", "sales", "products", "purchases", "customers", "expenses", "staff", "settings"] as const;
+export const SECTIONS = ["dashboard", "till", "sales", "products", "purchases", "customers", "expenses", "reports", "staff", "settings"] as const;
 
 export type Section = (typeof SECTIONS)[number];
 
@@ -23,6 +23,7 @@ export const SECTION_HREF: Record<Section, string> = {
   purchases: "/dashboard/purchases",
   customers: "/dashboard/customers",
   expenses: "/dashboard/expenses",
+  reports: "/dashboard/reports",
   staff: "/dashboard/staff",
   settings: "/dashboard/settings",
 };
