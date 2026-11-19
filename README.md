@@ -20,8 +20,10 @@ Turkish, in light and dark mode.
 | Owner password, staff logins with per-section access, owner unlock on shared tills | Done |
 | Dashboard, Settings (theme, language, shop details from Ariloo) | Done |
 | Products with variants (size, colour…), categories, barcodes, label printing | Done |
-| Till: scanner and camera input, cart, payments, receipts, cash drawer, returns | Next |
-| Stock movements, purchases, suppliers, counts, low-stock alerts | Planned |
+| Till: scanner, cart, discounts, mixed payments, tax, receipts; sales by day with reprint and void | Done |
+| Returns, camera scanning, customers on the till | Next |
+| Stock levels and quick adjustments | Done |
+| Purchases, suppliers, stock counts, low-stock alerts | Planned |
 | Customers, expenses, invoices | Planned |
 | Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
 | Reports, backups | Planned |
@@ -64,7 +66,6 @@ Set these in the Vercel project (Production). Never commit them.
 | `SHOPS_DB_TOKEN` | A Turso group token that opens every shop's own database (`db_url` in Ariloo). |
 | `DUKALOO_SSO_SECRET` | Shared with Ariloo; checks the one-minute "Open Dukaloo" link. Without it, owners can't arrive from Ariloo. |
 | `ARILOO_URL` | Where Ariloo lives, for shop logos and account links. Default `https://ariloo.app`. |
-| `SHOP_TIMEZONE` | The time zone for dates and "today". Default `Asia/Baghdad` (Ariloo has no per-shop column for it yet). |
 | `DB_TURSO_DATABASE_URL`, `DB_TURSO_AUTH_TOKEN` | Single-shop mode only: the one shop's database. |
 | `OWNER_PASSWORD` | Single-shop mode only: the owner password until one is chosen in the app. |
 | `SHOP_NAME`, `SHOP_CURRENCY`, `SHOP_DECIMALS`, `SHOP_LANG` | Single-shop mode only: the shop's details, which Ariloo provides in many-shop mode. |
@@ -118,8 +119,7 @@ Set these in the Vercel project (Production). Never commit them.
 - Refuse these as Dukaloo shop addresses, because they are the app's own
   paths (`lib/appRoots.ts`): `api`, `dashboard`, `login`, `owner-password`,
   `sw.js`, `offline.html`, `manifest.webmanifest`, `icon`, `apple-icon`.
-- Later, optionally: a `timezone` column per shop (until then all shops use
-  `SHOP_TIMEZONE`).
+- Nothing for time zones: each shop sets its own in Dukaloo's Settings.
 
 ## Products
 
@@ -145,6 +145,41 @@ Set these in the Vercel project (Production). Never commit them.
 - **Large catalogues**: the list is searched on the server (name, brand,
   SKU, barcode) and loaded 50 at a time.
 
+## Till and sales
+
+- **Selling**: scan a barcode (USB scanners type into the page; a scan
+  works with or without the search box focused), type an SKU, search, or
+  tap a product. Tap a cart line to change its quantity (parts of a unit
+  for kg, L, m…) or give it a discount; the % button gives a discount on
+  the whole sale.
+- **Paying**: cash, card or transfer (bank and wallet apps), or several of
+  them on one sale. Card and transfer can't exceed the total; change is
+  worked out from cash.
+- **The server decides the totals**: the till sends variant ids,
+  quantities, discounts and payments; the server prices them from the
+  database with the same function the till uses (`lib/sale.ts`), refuses
+  the sale if the total differs from what the cashier saw, and records the
+  sale, its lines, payments and stock movements in one transaction. Each
+  sale carries a `clientId`, so a retry never records it twice.
+- **Settings → Selling** (owner): whether the till may sell items whose
+  stock shows zero (on by default, since a new shop has entered no stock;
+  when off, the server refuses too), tax/VAT (name, rate, and whether shelf
+  prices include it), and the receipt's top and bottom text and paper
+  width (58 or 80 mm). In shops without decimals every amount is rounded to
+  whole units.
+- **Receipts** print in their own window (`components/sales/print-receipt.ts`).
+  With Chrome's `--kiosk-printing` they go straight to the default printer;
+  a cash drawer wired to the receipt printer opens when the printer driver
+  is set to open the drawer on print.
+- **Sales** lists each day's sales (in the shop's time zone) with totals by
+  payment method; any sale can be reprinted, and the owner can void one
+  (it stays in the records, and its items go back into stock).
+- **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
+  sale, void, and later purchase and return); the level is their sum.
+  Products can be set not to count stock (services). The product editor
+  shows each variant's level, with a quick "Adjust" (set a count, add,
+  remove).
+
 ## Conventions
 
 - **Money** is integer cents (hundredths of the shop's currency, also for
@@ -152,6 +187,10 @@ Set these in the Vercel project (Production). Never commit them.
 - **Formatting** (`lib/format.ts`) gives identical text on server and
   browser: Western digits, fixed grouping, month names from our own
   dictionaries, and times in the shop's time zone.
+- **Time zone**: by default each device uses its own; it reports its zone
+  in the `dukaloo_tz` cookie (`components/time-zone-sync.tsx`) so the
+  server renders dates as that browser will. The owner can instead pick one
+  zone for every device in Settings (`time_zone` in `shop_settings`).
 - **Server-only code** (database, crypto, secrets) starts with
   `import "server-only"`; shared types and Zod schemas are client-safe.
 - **Every API route and page checks access itself** and validates every

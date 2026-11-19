@@ -101,6 +101,31 @@ export function clockIn(ms: number, timeZone: string): Clock {
   return { year: Number(parts.year), month: Number(parts.month), day: Number(parts.day), hour: Number(parts.hour) % 24, minute: Number(parts.minute) };
 }
 
+// The moment a calendar day starts in `timeZone` (ms). Days are "YYYY-MM-DD".
+export function dayStart(day: string, timeZone: string): number {
+  const [y, m, d] = day.split("-").map(Number);
+  const guess = Date.UTC(y, m - 1, d);
+  let at = guess;
+  // Two passes settle the zone's offset (also across a clock change).
+  for (let i = 0; i < 2; i++) {
+    const c = clockIn(at, timeZone);
+    const shown = Date.UTC(c.year, c.month - 1, c.day, c.hour, c.minute);
+    at -= shown - guess;
+  }
+  return at;
+}
+
+// Today's date ("YYYY-MM-DD") in `timeZone`.
+export function dayOf(ms: number, timeZone: string): string {
+  const c = clockIn(ms, timeZone);
+  return `${c.year}-${String(c.month).padStart(2, "0")}-${String(c.day).padStart(2, "0")}`;
+}
+
+export function nextDay(day: string): string {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+}
+
 // "17 Nov 2026" (month name in the language).
 export function formatDate(ms: number, lang: Lang, timeZone: string): string {
   const c = clockIn(ms, timeZone);

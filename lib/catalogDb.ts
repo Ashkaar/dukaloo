@@ -175,6 +175,7 @@ export async function getProduct(id: number): Promise<Product | null> {
     options: parseJson<ProductOption[]>(row.options, []),
     variants: variants.map(toVariant),
     active: row.active === 1,
+    trackStock: row.trackStock === 1,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -226,6 +227,7 @@ export async function saveProduct(input: ProductInput, id: number | null): Promi
     unit: input.unit,
     options: JSON.stringify(input.options),
     active: input.active ? 1 : 0,
+    trackStock: input.trackStock ? 1 : 0,
     updatedAt: at,
   };
 

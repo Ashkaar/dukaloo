@@ -53,3 +53,15 @@ describe("dates", () => {
     expect(formatDate(ms, "tr", "Asia/Baghdad")).toBe("18 Kas 2026");
   });
 });
+
+describe("days in a time zone", () => {
+  it("start at local midnight", async () => {
+    const { dayStart, dayOf, nextDay } = await import("@/lib/format");
+    expect(new Date(dayStart("2026-11-18", "Asia/Baghdad")).toISOString()).toBe("2026-11-17T21:00:00.000Z");
+    expect(new Date(dayStart("2026-11-18", "UTC")).toISOString()).toBe("2026-11-18T00:00:00.000Z");
+    // Across a clock change (London, 29 March 2026).
+    expect(new Date(dayStart("2026-03-30", "Europe/London")).toISOString()).toBe("2026-03-29T23:00:00.000Z");
+    expect(dayOf(Date.UTC(2026, 10, 17, 22, 30), "Asia/Baghdad")).toBe("2026-11-18");
+    expect(nextDay("2026-12-31")).toBe("2027-01-01");
+  });
+});

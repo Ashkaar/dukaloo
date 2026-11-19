@@ -67,6 +67,8 @@ export interface Product {
   options: ProductOption[];
   variants: Variant[];
   active: boolean;
+  // Count stock for this product (off for services and things not counted).
+  trackStock: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -157,6 +159,7 @@ export const productSchema = z
     description: text(LIMITS.description),
     unit: z.enum(UNITS),
     active: z.boolean(),
+    trackStock: z.boolean().default(true),
     options: z.array(optionInput).max(LIMITS.options),
     variants: z.array(variantInput).min(1).max(LIMITS.variants),
   })
