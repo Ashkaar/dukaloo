@@ -69,6 +69,10 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      camera: {
+        title: "Camera scanning",
+        text: "No barcode scanner? Scan with the phone or tablet camera at the till, in product search and in the barcode field.",
+      },
       returns: {
         title: "Returns",
         text: "Give items back from any past sale, in full or in part. The refund is the item’s share of what was paid, and counted items go back into stock.",
@@ -454,6 +458,16 @@ const en = {
     cantVoid: "This sale has returns, so it can’t be voided. Return the rest instead.",
     saleVoided: "This sale was voided.",
     tooMany: "That’s more than is left to return.",
+  },
+
+  camera: {
+    scan: "Scan with the camera",
+    title: "Scan a barcode",
+    intro: "Hold the barcode inside the frame.",
+    introContinuous: "Hold each barcode inside the frame. Every scan goes into the cart.",
+    last: "Last scanned:",
+    denied: "The camera is blocked. Allow it in the browser’s site settings and try again.",
+    unsupported: "This browser can’t use the camera here.",
   },
 
   errors: {

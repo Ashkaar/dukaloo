@@ -22,7 +22,8 @@ Turkish, in light and dark mode.
 | Products with variants (size, colour…), categories, barcodes, label printing | Done |
 | Till: scanner, cart, discounts, mixed payments, tax, receipts; sales by day with reprint and void | Done |
 | Returns and refunds | Done |
-| Camera scanning, customers on the till | Next |
+| Camera barcode scanning | Done |
+| Customers on the till | Next |
 | Stock levels and quick adjustments | Done |
 | Purchases, suppliers, stock counts, low-stock alerts | Planned |
 | Customers, expenses, invoices | Planned |
@@ -138,6 +139,13 @@ Set these in the Vercel project (Production). Never commit them.
   barcode or SKU belongs to one live variant at a time (enforced by the
   database). On the products list, a scan anywhere on the page searches for
   that code (`components/use-scanner.ts`).
+- **Camera scanning** (`components/camera-scanner.tsx`): on phones and
+  tablets without a scanner, the camera button reads barcodes with the
+  browser's BarcodeDetector where it exists (Chrome on Android and
+  computers) and otherwise with ZXing (`@zxing/browser`, loaded only when
+  the camera opens; Safari and iPhones). On the till it stays open and
+  adds every scan to the cart, with a beep; in a barcode field or search
+  it closes after one code.
 - **Labels**: "Print labels" opens a print window with Code 128 / EAN
   barcodes (bwip-js), the name, the variant and optionally the price, for
   50 × 30 mm or 38 × 25 mm label printers or A4 sheets (3 × 8).

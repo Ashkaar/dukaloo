@@ -18,6 +18,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Sheet, SheetContent, SheetTitle } from "../ui/sheet";
 import { useScanner } from "../use-scanner";
+import { CameraScannerButton } from "../camera-scanner";
 import { PayDialog } from "./pay-dialog";
 import { ReceiptDialog } from "./receipt-dialog";
 
@@ -231,7 +232,8 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
     // (cancelling the page padding the app frame adds for it).
     <div className="-mb-24 flex h-[calc(100dvh-3.5rem-4rem)] min-h-0 md:-mb-10 md:h-[calc(100dvh-3rem)]">
       <section className="flex min-w-0 flex-1 flex-col gap-3 px-4 pt-2 pb-24 md:px-6 lg:pb-4">
-        <div className="relative">
+        <div className="flex gap-2">
+        <div className="relative flex-1">
           <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             ref={searchRef}
@@ -253,6 +255,14 @@ export function Till({ initialItems, initialSettings, categories }: { initialIte
             aria-label={t.till.search}
             className="h-12 ps-9 text-base"
             maxLength={100}
+          />
+        </div>
+          <CameraScannerButton
+            continuous
+            className="size-12"
+            onScan={(code) => {
+              if (!addByCode(code)) toast.error(t.till.notFound(code));
+            }}
           />
         </div>
         {categories.length > 0 && (

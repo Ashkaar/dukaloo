@@ -65,6 +65,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      camera: {
+        title: "Kamerayla okutma",
+        text: "Barkod okuyucunuz yok mu? Kasada, ürün aramasında ve barkod alanında telefon veya tabletin kamerasıyla okutun.",
+      },
       returns: {
         title: "İadeler",
         text: "Geçmiş bir satıştan ürünleri tamamen veya kısmen iade alın. İade tutarı ürünün ödenen paydaki karşılığıdır ve sayılan ürünler stoğa döner.",
@@ -450,6 +454,16 @@ const tr: Messages = {
     cantVoid: "Bu satışta iade var, iptal edilemez. Bunun yerine kalanı iade alın.",
     saleVoided: "Bu satış iptal edildi.",
     tooMany: "Bu, iade edilebilecek miktardan fazla.",
+  },
+
+  camera: {
+    scan: "Kamerayla okut",
+    title: "Barkod okut",
+    intro: "Barkodu çerçevenin içinde tutun.",
+    introContinuous: "Her barkodu çerçevenin içinde tutun. Her okutma sepete eklenir.",
+    last: "Son okutulan:",
+    denied: "Kamera engelli. Tarayıcının site ayarlarından izin verip tekrar deneyin.",
+    unsupported: "Bu tarayıcı burada kamerayı kullanamıyor.",
   },
 
   errors: {

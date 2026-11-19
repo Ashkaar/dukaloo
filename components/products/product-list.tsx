@@ -16,6 +16,7 @@ import { Card } from "../ui/card";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useScanner } from "../use-scanner";
+import { CameraScannerButton } from "../camera-scanner";
 import { CategoriesDialog } from "./categories-dialog";
 
 type Page = { items: ProductSummary[]; total: number };
@@ -152,6 +153,7 @@ export function ProductList({ categories: initialCategories, first }: { categori
       </PageHeader>
 
       <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-1 gap-2">
         <div className="relative flex-1">
           <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -164,6 +166,8 @@ export function ProductList({ categories: initialCategories, first }: { categori
             className="ps-9"
             maxLength={100}
           />
+        </div>
+          <CameraScannerButton onScan={setQ} />
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex">
           <Select value={category} onValueChange={setCategory}>
