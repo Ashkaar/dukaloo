@@ -2,6 +2,8 @@ import "server-only";
 import { eq, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { getDb } from "./db";
+import { dayOf } from "./format";
+import { normaliseSalesSettings, type SalesSettings } from "./sale";
 import { shopSettings } from "./db/schema";
 import { effectiveTimeZone, normaliseSetting, TZ_COOKIE, type TimeZoneSetting } from "./timeZone";
 
@@ -45,4 +47,18 @@ export async function requestTimeZone(): Promise<{ setting: TimeZoneSetting; tim
   }
   const device = (await cookies()).get(TZ_COOKIE)?.value;
   return { setting, timeZone: effectiveTimeZone(setting, device) };
+}
+
+export async function getSalesSettings(): Promise<SalesSettings> {
+  return normaliseSalesSettings(await readSetting("sales"));
+}
+
+export async function setSalesSettings(value: SalesSettings): Promise<void> {
+  await writeSetting("sales", normaliseSalesSettings(value));
+}
+
+// Today's date in this request's time zone, with the zone.
+export async function requestToday(): Promise<{ day: string; timeZone: string }> {
+  const { timeZone } = await requestTimeZone();
+  return { day: dayOf(Date.now(), timeZone), timeZone };
 }

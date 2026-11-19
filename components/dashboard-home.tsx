@@ -20,8 +20,8 @@ export interface Subscription {
   accountUrl: string;
 }
 
-export function DashboardHome({ viewer, subscription }: { viewer: Viewer; subscription: Subscription | null }) {
-  const { t, date } = useI18n();
+export function DashboardHome({ viewer, subscription, today }: { viewer: Viewer; subscription: Subscription | null; today: { count: number; totalCents: number } | null }) {
+  const { t, date, money } = useI18n();
   const shop = useShop();
   const shortcuts = navItems(viewer.sections, t).filter((i) => i.section !== "dashboard");
 
@@ -31,6 +31,19 @@ export function DashboardHome({ viewer, subscription }: { viewer: Viewer; subscr
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          {today && (
+            <Link href={shop.href("/dashboard/sales")} className="block">
+              <Card className="transition-colors hover:border-primary/40">
+                <CardContent className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">{t.dashboard.today}</p>
+                    <p className="tabular mt-1 text-3xl font-extrabold">{money(today.totalCents)}</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t.dashboard.todayCount(today.count)}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
           {shortcuts.length > 0 && (
             <Card>
               <CardHeader>

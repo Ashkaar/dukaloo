@@ -15,6 +15,8 @@ import { PageBody, PageHeader } from "./page-header";
 import { useShop } from "./shop-provider";
 import { useTheme, type ThemeChoice } from "./theme";
 import { TimeZoneCard } from "./time-zone-card";
+import { SellingCard } from "./selling-card";
+import type { SalesSettings } from "@/lib/sale";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
@@ -27,7 +29,7 @@ export interface ShopFacts {
   accountUrl: string | null;
 }
 
-export function SettingsScreen({ viewer, shop }: { viewer: Viewer; shop: ShopFacts }) {
+export function SettingsScreen({ viewer, shop, selling }: { viewer: Viewer; shop: ShopFacts; selling: SalesSettings }) {
   const { t, lang } = useI18n();
   const router = useRouter();
   const { href } = useShop();
@@ -111,6 +113,7 @@ export function SettingsScreen({ viewer, shop }: { viewer: Viewer; shop: ShopFac
         </Card>
 
         <div className="space-y-4">
+          <SellingCard initial={selling} canChange={viewer.isOwner} />
           <TimeZoneCard canChange={viewer.isOwner} />
           <Card>
             <CardHeader>

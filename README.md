@@ -20,8 +20,10 @@ Turkish, in light and dark mode.
 | Owner password, staff logins with per-section access, owner unlock on shared tills | Done |
 | Dashboard, Settings (theme, language, shop details from Ariloo) | Done |
 | Products with variants (size, colour…), categories, barcodes, label printing | Done |
-| Till: scanner and camera input, cart, payments, receipts, cash drawer, returns | Next |
-| Stock movements, purchases, suppliers, counts, low-stock alerts | Planned |
+| Till: scanner, cart, discounts, mixed payments, tax, receipts; sales by day with reprint and void | Done |
+| Returns, camera scanning, customers on the till | Next |
+| Stock levels and quick adjustments | Done |
+| Purchases, suppliers, stock counts, low-stock alerts | Planned |
 | Customers, expenses, invoices | Planned |
 | Offline: product catalogue on the device, outbox, background sync, installable app | Planned |
 | Reports, backups | Planned |
@@ -142,6 +144,41 @@ Set these in the Vercel project (Production). Never commit them.
   records can still name it; its barcodes and SKUs become free again.
 - **Large catalogues**: the list is searched on the server (name, brand,
   SKU, barcode) and loaded 50 at a time.
+
+## Till and sales
+
+- **Selling**: scan a barcode (USB scanners type into the page; a scan
+  works with or without the search box focused), type an SKU, search, or
+  tap a product. Tap a cart line to change its quantity (parts of a unit
+  for kg, L, m…) or give it a discount; the % button gives a discount on
+  the whole sale.
+- **Paying**: cash, card or transfer (bank and wallet apps), or several of
+  them on one sale. Card and transfer can't exceed the total; change is
+  worked out from cash.
+- **The server decides the totals**: the till sends variant ids,
+  quantities, discounts and payments; the server prices them from the
+  database with the same function the till uses (`lib/sale.ts`), refuses
+  the sale if the total differs from what the cashier saw, and records the
+  sale, its lines, payments and stock movements in one transaction. Each
+  sale carries a `clientId`, so a retry never records it twice.
+- **Settings → Selling** (owner): whether the till may sell items whose
+  stock shows zero (on by default, since a new shop has entered no stock;
+  when off, the server refuses too), tax/VAT (name, rate, and whether shelf
+  prices include it), and the receipt's top and bottom text and paper
+  width (58 or 80 mm). In shops without decimals every amount is rounded to
+  whole units.
+- **Receipts** print in their own window (`components/sales/print-receipt.ts`).
+  With Chrome's `--kiosk-printing` they go straight to the default printer;
+  a cash drawer wired to the receipt printer opens when the printer driver
+  is set to open the drawer on print.
+- **Sales** lists each day's sales (in the shop's time zone) with totals by
+  payment method; any sale can be reprinted, and the owner can void one
+  (it stays in the records, and its items go back into stock).
+- **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
+  sale, void, and later purchase and return); the level is their sum.
+  Products can be set not to count stock (services). The product editor
+  shows each variant's level, with a quick "Adjust" (set a count, add,
+  remove).
 
 ## Conventions
 

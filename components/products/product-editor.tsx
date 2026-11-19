@@ -33,6 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 import { LabelsDialog } from "./labels-dialog";
+import { StockDialog } from "./stock-dialog";
 
 interface Draft {
   // A stable key for React, also for variants not saved yet.
@@ -65,8 +66,8 @@ function blankDraft(options: string[] = [], like?: Draft): Draft {
   };
 }
 
-export function ProductEditor({ product, categories }: { product: Product | null; categories: Category[] }) {
-  const { t } = useI18n();
+export function ProductEditor({ product, categories, stock = {} }: { product: Product | null; categories: Category[]; stock?: Record<number, number> }) {
+  const { t, quantity } = useI18n();
   const shop = useShop();
   const router = useRouter();
 
@@ -76,6 +77,7 @@ export function ProductEditor({ product, categories }: { product: Product | null
   const [description, setDescription] = useState(product?.description ?? "");
   const [unit, setUnit] = useState<Unit>(product?.unit ?? "piece");
   const [active, setActive] = useState(product?.active ?? true);
+  const [trackStock, setTrackStock] = useState(product?.trackStock ?? true);
   const [options, setOptions] = useState<ProductOption[]>(product?.options ?? []);
   const [hasOptions, setHasOptions] = useState((product?.options.length ?? 0) > 0);
   const [variants, setVariants] = useState<Draft[]>(() =>
@@ -86,6 +88,8 @@ export function ProductEditor({ product, categories }: { product: Product | null
   const [error, setError] = useState<string | null>(null);
   const [archiving, setArchiving] = useState(false);
   const [labels, setLabels] = useState(false);
+  const [levels, setLevels] = useState(stock);
+  const [adjusting, setAdjusting] = useState<{ id: number; label: string } | null>(null);
 
   // Variants follow the options: one per combination, keeping what was
   // already entered for a combination that still exists.
@@ -128,6 +132,7 @@ export function ProductEditor({ product, categories }: { product: Product | null
       description: description.trim(),
       unit,
       active,
+      trackStock,
       options: usable.map((o) => ({ name: o.name.trim(), values: o.values })),
       variants: variants.map((v) => ({
         ...(v.id ? { id: v.id } : {}),
@@ -311,6 +316,13 @@ export function ProductEditor({ product, categories }: { product: Product | null
                   </span>
                   <Switch checked={active} onCheckedChange={setActive} />
                 </Label>
+                <Label className="flex cursor-pointer items-center justify-between gap-4">
+                  <span>
+                    <span className="block font-semibold">{t.stock.trackStock}</span>
+                    <span className="block text-xs font-normal text-muted-foreground">{t.stock.trackStockNote}</span>
+                  </span>
+                  <Switch checked={trackStock} onCheckedChange={setTrackStock} />
+                </Label>
                 <div className="space-y-2">
                   <Label htmlFor="p-category">{t.products.category}</Label>
                   <Select value={categoryId === null ? NONE : String(categoryId)} onValueChange={(v) => setCategoryId(v === NONE ? null : Number(v))}>
@@ -329,6 +341,32 @@ export function ProductEditor({ product, categories }: { product: Product | null
                 </div>
               </CardContent>
             </Card>
+            {product && product.trackStock && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t.stock.inStock}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 pb-2">
+                  <ul className="divide-y divide-border">
+                    {product.variants.map((v) => {
+                      const label = variantLabel(v) || product.name;
+                      const level = levels[v.id] ?? 0;
+                      return (
+                        <li key={v.id} className="flex items-center gap-3 px-5 py-2.5">
+                          <span className="min-w-0 flex-1 truncate text-sm">{label}</span>
+                          <span className={cn("tabular text-sm font-bold", level <= 0 ? "text-red-600 dark:text-red-400" : level <= v.lowStockMilli ? "text-accent-700 dark:text-accent-400" : "")}>
+                            {quantity(level)}
+                          </span>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setAdjusting({ id: v.id, label })}>
+                            {t.stock.adjust}
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
             {product && (
               <Button type="button" variant="destructive-ghost" className="w-full" onClick={() => setArchiving(true)}>
                 <Trash2Icon />
@@ -420,6 +458,18 @@ export function ProductEditor({ product, categories }: { product: Product | null
             onConfirm={archive}
           />
           <LabelsDialog open={labels} onOpenChange={setLabels} product={product} />
+          {adjusting && (
+            <StockDialog
+              variantId={adjusting.id}
+              label={adjusting.label}
+              level={levels[adjusting.id] ?? 0}
+              onClose={() => setAdjusting(null)}
+              onSaved={(milli) => {
+                setLevels((l) => ({ ...l, [adjusting.id]: milli }));
+                setAdjusting(null);
+              }}
+            />
+          )}
         </>
       )}
     </PageBody>

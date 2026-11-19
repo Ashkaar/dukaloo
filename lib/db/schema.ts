@@ -93,6 +93,8 @@ export const products = sqliteTable(
     archivedAt: integer("archived_at"),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
+    // Added later (ADDED_COLUMNS).
+    trackStock: integer("track_stock").notNull().default(1),
   },
   (t) => [index("products_category").on(t.categoryId), index("products_name").on(sql`${t.name} COLLATE NOCASE`)],
 );
@@ -120,4 +122,79 @@ export const productVariants = sqliteTable(
     uniqueIndex("product_variants_barcode").on(t.barcode).where(sql`${t.barcode} <> '' AND ${t.archivedAt} IS NULL`),
     uniqueIndex("product_variants_sku").on(sql`${t.sku} COLLATE NOCASE`).where(sql`${t.sku} <> '' AND ${t.archivedAt} IS NULL`),
   ],
+);
+
+// ---- Stock ----------------------------------------------------------------
+
+export const stockMoves = sqliteTable(
+  "stock_moves",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    variantId: integer("variant_id").notNull(),
+    qtyMilli: integer("qty_milli").notNull(),
+    kind: text("kind").notNull(),
+    refId: integer("ref_id"),
+    note: text("note").notNull().default(""),
+    actor: text("actor").notNull().default(""),
+    at: integer("at").notNull(),
+  },
+  (t) => [index("stock_moves_variant").on(t.variantId), index("stock_moves_at").on(t.at)],
+);
+
+// ---- Sales ----------------------------------------------------------------
+
+export const sales = sqliteTable(
+  "sales",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    number: integer("number").notNull(),
+    clientId: text("client_id").notNull(),
+    at: integer("at").notNull(),
+    staffId: integer("staff_id"),
+    staffName: text("staff_name").notNull().default(""),
+    status: text("status").notNull().default("done"),
+    subtotalCents: integer("subtotal_cents").notNull(),
+    discountCents: integer("discount_cents").notNull().default(0),
+    taxCents: integer("tax_cents").notNull().default(0),
+    taxName: text("tax_name").notNull().default(""),
+    taxRateBp: integer("tax_rate_bp").notNull().default(0),
+    taxInclusive: integer("tax_inclusive").notNull().default(1),
+    totalCents: integer("total_cents").notNull(),
+    paidCents: integer("paid_cents").notNull(),
+    changeCents: integer("change_cents").notNull().default(0),
+    note: text("note").notNull().default(""),
+    voidedAt: integer("voided_at"),
+    voidedBy: text("voided_by").notNull().default(""),
+  },
+  (t) => [uniqueIndex("sales_client_id").on(t.clientId), uniqueIndex("sales_number").on(t.number), index("sales_at").on(t.at)],
+);
+
+export const saleLines = sqliteTable(
+  "sale_lines",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    saleId: integer("sale_id").notNull(),
+    variantId: integer("variant_id").notNull(),
+    productId: integer("product_id").notNull(),
+    name: text("name").notNull(),
+    variantLabel: text("variant_label").notNull().default(""),
+    unit: text("unit").notNull().default("piece"),
+    qtyMilli: integer("qty_milli").notNull(),
+    unitPriceCents: integer("unit_price_cents").notNull(),
+    discountCents: integer("discount_cents").notNull().default(0),
+    totalCents: integer("total_cents").notNull(),
+    costCents: integer("cost_cents").notNull().default(0),
+  },
+  (t) => [index("sale_lines_sale").on(t.saleId), index("sale_lines_variant").on(t.variantId)],
+);
+
+export const salePayments = sqliteTable(
+  "sale_payments",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    saleId: integer("sale_id").notNull(),
+    method: text("method").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+  },
+  (t) => [index("sale_payments_sale").on(t.saleId)],
 );

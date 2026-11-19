@@ -18,6 +18,7 @@ const product = (extra: Partial<ProductInput> = {}): ProductInput => ({
   description: "",
   unit: "piece",
   active: true,
+  trackStock: true,
   options: [],
   variants: [variant([])],
   ...extra,

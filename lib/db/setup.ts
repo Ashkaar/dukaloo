@@ -88,10 +88,77 @@ export const SCHEMA: string[] = [
   // A barcode or SKU belongs to one live variant at a time.
   "CREATE UNIQUE INDEX IF NOT EXISTS product_variants_barcode ON product_variants (barcode) WHERE barcode <> '' AND archived_at IS NULL",
   "CREATE UNIQUE INDEX IF NOT EXISTS product_variants_sku ON product_variants (sku COLLATE NOCASE) WHERE sku <> '' AND archived_at IS NULL",
+
+  // ---- Stock: every change is a row; the level is their sum ----
+  // kind: opening | adjust | count | sale | void | return | purchase
+  `CREATE TABLE IF NOT EXISTS stock_moves (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    variant_id INTEGER NOT NULL,
+    qty_milli INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    ref_id INTEGER,
+    note TEXT NOT NULL DEFAULT '',
+    actor TEXT NOT NULL DEFAULT '',
+    at INTEGER NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS stock_moves_variant ON stock_moves (variant_id)",
+  "CREATE INDEX IF NOT EXISTS stock_moves_at ON stock_moves (at)",
+
+  // ---- Sales ----
+  `CREATE TABLE IF NOT EXISTS sales (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    number INTEGER NOT NULL,
+    client_id TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    staff_id INTEGER,
+    staff_name TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'done',
+    subtotal_cents INTEGER NOT NULL,
+    discount_cents INTEGER NOT NULL DEFAULT 0,
+    tax_cents INTEGER NOT NULL DEFAULT 0,
+    tax_name TEXT NOT NULL DEFAULT '',
+    tax_rate_bp INTEGER NOT NULL DEFAULT 0,
+    tax_inclusive INTEGER NOT NULL DEFAULT 1,
+    total_cents INTEGER NOT NULL,
+    paid_cents INTEGER NOT NULL,
+    change_cents INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
+    voided_at INTEGER,
+    voided_by TEXT NOT NULL DEFAULT ''
+  )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS sales_client_id ON sales (client_id)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS sales_number ON sales (number)",
+  "CREATE INDEX IF NOT EXISTS sales_at ON sales (at)",
+  `CREATE TABLE IF NOT EXISTS sale_lines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_id INTEGER NOT NULL,
+    variant_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    variant_label TEXT NOT NULL DEFAULT '',
+    unit TEXT NOT NULL DEFAULT 'piece',
+    qty_milli INTEGER NOT NULL,
+    unit_price_cents INTEGER NOT NULL,
+    discount_cents INTEGER NOT NULL DEFAULT 0,
+    total_cents INTEGER NOT NULL,
+    cost_cents INTEGER NOT NULL DEFAULT 0
+  )`,
+  "CREATE INDEX IF NOT EXISTS sale_lines_sale ON sale_lines (sale_id)",
+  "CREATE INDEX IF NOT EXISTS sale_lines_variant ON sale_lines (variant_id)",
+  `CREATE TABLE IF NOT EXISTS sale_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_id INTEGER NOT NULL,
+    method TEXT NOT NULL,
+    amount_cents INTEGER NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS sale_payments_sale ON sale_payments (sale_id)",
 ];
 
 // Columns added to tables after they first shipped: [table, column, definition].
-export const ADDED_COLUMNS: [string, string, string][] = [];
+export const ADDED_COLUMNS: [string, string, string][] = [
+  // Count this product's stock (off for services and things not counted).
+  ["products", "track_stock", "INTEGER NOT NULL DEFAULT 1"],
+];
 
 async function addMissingColumns(client: Client): Promise<void> {
   const tables = [...new Set(ADDED_COLUMNS.map(([table]) => table))];
