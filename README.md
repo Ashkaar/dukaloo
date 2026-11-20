@@ -268,7 +268,10 @@ Set these in the Vercel project (Production). Never commit them.
 ## Offline
 
 - **Installable**: `/<shop>/manifest.webmanifest` carries the shop's name and
-  opens at its till; icons are in `public/`.
+  opens at its till. The Dukaloo logo (a shopping bag whose "oo" are eyes)
+  comes from `assets/dukaloo-logo/` in the Ariloo repo: `app/icon.svg`
+  (browser tab), `public/icon-192.png`, `icon-512.png`,
+  `icon-maskable-512.png` (installed app) and `apple-touch-icon.png`.
 - **Service worker** (`public/sw.js`, registered by
   `components/offline-sync.tsx`): page loads are network first, else the
   copy saved on the device, else `public/offline.html`; app files
