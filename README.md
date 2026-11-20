@@ -1,6 +1,6 @@
 # Dukaloo
 
-Point of sale and shop management for retail shops: a till with barcode
+Point of sale and shop management for retail shops: a checkout with barcode
 scanning, products with variants, stock, purchases and suppliers, customers,
 expenses, invoices, reports and backups. It runs in the browser on phones,
 tablets, computers and touch tills, with nothing to install, and keeps
@@ -20,7 +20,7 @@ Turkish, in light and dark mode.
 | Owner password, staff logins with per-section access, owner unlock on shared tills | Done |
 | Dashboard, Settings (theme, language, shop details from Ariloo) | Done |
 | Products with variants (size, colour…), categories, barcodes, label printing | Done |
-| Till: scanner, cart, discounts, mixed payments, tax, receipts; sales by day with reprint and void | Done |
+| Checkout: scanner, cart, discounts, mixed payments, tax, receipts; sales by day with reprint and void | Done |
 | Returns and refunds | Done |
 | Camera barcode scanning | Done |
 | Customers: list, history, picked at the till, on receipts | Done |
@@ -166,7 +166,11 @@ Set these in the Vercel project (Production). Never commit them.
 - **Large catalogues**: the list is searched on the server (name, brand,
   SKU, barcode) and loaded 50 at a time.
 
-## Till and sales
+## Checkout and sales
+
+The selling screen is called **Checkout** on screen in English (Kasa in
+Turkish, کاشێر in Kurdish, نقطة البيع in Arabic). In the code and its address
+(`/dashboard/till`, section `till`) it is still "till", and so is it below.
 
 - **Selling**: scan a barcode (USB scanners type into the page; a scan
   works with or without the search box focused), type an SKU, search, or
