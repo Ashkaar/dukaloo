@@ -15,7 +15,7 @@
 //
 // Bump VERSION to drop everything cached by an older worker.
 
-const VERSION = "dukaloo-v1";
+const VERSION = "dukaloo-v2";
 const OFFLINE_PAGE = "/offline.html";
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;

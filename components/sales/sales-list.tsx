@@ -143,12 +143,12 @@ export function SalesList({ first, today, settings, canVoid }: { first: DayOfSal
 
 function Stat({ label, value, strong = false, icon, note }: { label: string; value: string; strong?: boolean; icon?: React.ReactNode; note?: string }) {
   return (
-    <Card className="px-4 py-3">
+    <Card className={cn("min-w-0 px-4 py-3", strong && "col-span-2 lg:col-span-1")}>
       <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         {icon}
         {label}
       </p>
-      <p className={cn("tabular mt-1 truncate font-bold", strong ? "text-2xl" : "text-lg")}>{value}</p>
+      <p className={cn("tabular mt-1 font-bold break-words", strong ? "text-2xl" : "text-lg")}>{value}</p>
       {note && <p className="truncate text-xs text-accent-700 dark:text-accent-400">{note}</p>}
     </Card>
   );

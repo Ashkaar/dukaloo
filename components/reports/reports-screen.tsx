@@ -223,11 +223,13 @@ export function ReportsScreen({ today, first }: { today: string; first: Report }
   );
 }
 
+// Amounts wrap rather than being cut off: a whole year's sales in IQD is a
+// long number on a phone. The main tile takes the full width there.
 function Tile({ label, value, note, strong = false, negative = false }: { label: string; value: string; note?: string; strong?: boolean; negative?: boolean }) {
   return (
-    <Card className="px-4 py-3">
+    <Card className={cn("min-w-0 px-4 py-3", strong && "col-span-2 lg:col-span-1")}>
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className={cn("tabular mt-1 truncate font-extrabold", strong ? "text-2xl" : "text-xl", negative && "text-red-600 dark:text-red-400")}>{value}</p>
+      <p className={cn("tabular mt-1 font-extrabold break-words", strong ? "text-3xl lg:text-2xl" : "text-lg sm:text-xl", negative && "text-red-600 dark:text-red-400")}>{value}</p>
       {note && <p className="truncate text-xs text-muted-foreground">{note}</p>}
     </Card>
   );
