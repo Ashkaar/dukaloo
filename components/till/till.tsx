@@ -334,7 +334,7 @@ export function Till({
   return (
     // Fills the screen below the header and above the phone's bottom bar
     // (cancelling the page padding the app frame adds for it).
-    <div className="-mb-24 flex h-[calc(100dvh-3.5rem-4rem)] min-h-0 md:-mb-10 md:h-[calc(100dvh-3rem)]">
+    <div className="-mb-24 flex h-[calc(100dvh-3.5rem-4rem)] min-h-0 md:-mb-10 md:h-[calc(100dvh-3.5rem)]">
       <section className="flex min-w-0 flex-1 flex-col gap-3 px-4 pt-2 pb-24 md:px-6 lg:pb-4">
         <div className="flex gap-2">
         <div className="relative flex-1">

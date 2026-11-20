@@ -25,7 +25,9 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-export function UserMenu({ viewer, compact = false, className }: { viewer: Viewer; compact?: boolean; className?: string }) {
+// `compact`: the round button in a top bar, its menu opening below. With
+// `showName` the name shows beside it (from tablets up).
+export function UserMenu({ viewer, compact = false, showName = false, className }: { viewer: Viewer; compact?: boolean; showName?: boolean; className?: string }) {
   const { t, lang } = useI18n();
   const shop = useShop();
   const router = useRouter();
@@ -61,13 +63,14 @@ export function UserMenu({ viewer, compact = false, className }: { viewer: Viewe
         aria-label={t.header.userMenu}
         className={cn(
           "flex cursor-pointer items-center gap-2.5 rounded-lg text-start outline-none transition-colors hover:bg-highlight focus-visible:ring-3 focus-visible:ring-ring/40",
-          compact ? "p-1" : "px-2 py-1.5",
+          compact ? (showName ? "py-1 ps-1 pe-2" : "p-1") : "px-2 py-1.5",
           className,
         )}
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary-soft-foreground">
           {viewer.kind === "owner" ? <UserRoundIcon className="size-4" /> : who.slice(0, 1).toUpperCase()}
         </span>
+        {compact && showName && <span className="max-w-40 truncate text-sm font-semibold">{who}</span>}
         {!compact && (
           <>
             <span className="min-w-0 flex-1">
