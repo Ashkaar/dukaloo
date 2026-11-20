@@ -3,7 +3,7 @@
 import { ArrowLeftIcon, BarcodeIcon, PlusIcon, PrinterIcon, Trash2Icon, WandSparklesIcon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   combinations,
@@ -17,7 +17,7 @@ import {
   type ProductOption,
   type Unit,
 } from "@/lib/catalog";
-import { errorMessage, sendJson } from "@/lib/clientApi";
+import { errorMessage, sendFile, sendJson } from "@/lib/clientApi";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "../confirm-dialog";
 import { FormError } from "../form-error";
@@ -27,6 +27,7 @@ import { PageBody } from "../page-header";
 import { useShop } from "../shop-provider";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { PhotoCard } from "./photo-card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -91,6 +92,9 @@ export function ProductEditor({ product, categories, stock = {} }: { product: Pr
   const [labels, setLabels] = useState(false);
   const [levels, setLevels] = useState(stock);
   const [adjusting, setAdjusting] = useState<{ id: number; label: string } | null>(null);
+  const [imageVersion, setImageVersion] = useState(product?.imageVersion ?? 0);
+  // A photo chosen before a new product is first saved.
+  const pendingPhoto = useRef<Blob | null>(null);
 
   // Variants follow the options: one per combination, keeping what was
   // already entered for a combination that still exists.
@@ -152,6 +156,9 @@ export function ProductEditor({ product, categories, stock = {} }: { product: Pr
       const { product: saved } = await sendJson<{ product: Product }>(product ? `/api/products/${product.id}` : "/api/products", product ? "PUT" : "POST", body);
       toast.success(t.products.saved);
       if (!product) {
+        if (pendingPhoto.current) {
+          await sendFile(`/api/products/${saved.id}/image`, pendingPhoto.current).catch(() => toast.error(t.photos.notSaved));
+        }
         router.replace(shop.href(`/dashboard/products/${saved.id}`));
       } else {
         setVariants(saved.variants.map((v) => ({ ...v, key: `v${v.id}` })));
@@ -308,6 +315,7 @@ export function ProductEditor({ product, categories, stock = {} }: { product: Pr
           </div>
 
           <div className="space-y-6">
+            <PhotoCard productId={product?.id ?? null} version={imageVersion} onChange={setImageVersion} onPending={(photo) => (pendingPhoto.current = photo)} />
             <Card>
               <CardContent className="space-y-4">
                 <Label className="flex cursor-pointer items-center justify-between gap-4">

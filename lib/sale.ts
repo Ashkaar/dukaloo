@@ -282,6 +282,8 @@ export interface TillItem {
   priceCents: number;
   trackStock: boolean;
   stockMilli: number;
+  // The product's photo version; 0 = none.
+  imageVersion: number;
 }
 
 // ---- Returns ------------------------------------------------------------------

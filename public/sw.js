@@ -15,11 +15,14 @@
 //
 // Bump VERSION to drop everything cached by an older worker.
 
-const VERSION = "dukaloo-v2";
+const VERSION = "dukaloo-v3";
 const OFFLINE_PAGE = "/offline.html";
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;
 const DATA = `${VERSION}-data`;
+// Product photos: each version has its own address, so once kept it is good.
+const PHOTOS = `${VERSION}-photos`;
+const MAX_PHOTOS = 1500;
 const MAX_ASSETS = 500;
 const MAX_DATA = 200;
 
@@ -77,6 +80,18 @@ async function asset(request) {
   return response;
 }
 
+async function photo(request) {
+  const cache = await caches.open(PHOTOS);
+  const hit = await cache.match(request);
+  if (hit) return hit;
+  const response = await fetch(request);
+  if (response.ok) {
+    await cache.put(request, response.clone());
+    trim(cache, MAX_PHOTOS);
+  }
+  return response;
+}
+
 async function data(request) {
   const cache = await caches.open(DATA);
   try {
@@ -100,6 +115,10 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/_next/static/") || /\.(png|svg|ico|woff2?)$/.test(url.pathname)) {
     event.respondWith(asset(request));
+    return;
+  }
+  if (/\/api\/products\/\d+\/image$/.test(url.pathname)) {
+    event.respondWith(photo(request));
     return;
   }
   if (request.mode === "navigate") {

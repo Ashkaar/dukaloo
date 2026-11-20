@@ -74,6 +74,10 @@ const en = {
     markRead: "Mark all as read",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      photos: {
+        title: "Product photos",
+        text: "Add a photo to each product with the phone camera or from a file. It shows on Checkout tiles and in the product list, and works offline once seen.",
+      },
       scale: {
         title: "Items sold by weight",
         text: "Turn it on in Settings: scan labels printed by your shop scale (weight or price), or read a scale plugged into the checkout computer.",
@@ -732,6 +736,19 @@ const en = {
     reading: "Reading…",
     noPort: "No scale chosen. Connect it and try again (Chrome or Edge on a computer).",
     noReading: "No weight from the scale. Check it is on, steady and set to the speed in Settings.",
+  },
+
+  photos: {
+    title: "Photo",
+    take: "Take photo",
+    choose: "Choose photo",
+    change: "Change",
+    remove: "Remove",
+    note: "Shown on Checkout and in the product list. The middle of the picture is used, made square.",
+    working: "Preparing the photo…",
+    saved: "Photo saved.",
+    unreadable: "This picture couldn’t be used. Try another one (JPEG, PNG or WebP).",
+    notSaved: "The product was saved, but its photo wasn’t. Add it again.",
   },
 
   errors: {

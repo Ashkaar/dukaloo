@@ -25,6 +25,7 @@ Turkish, in light and dark mode.
 | Camera barcode scanning | Done |
 | Customers: list, history, picked at the till, on receipts | Done |
 | Stock levels and quick adjustments | Done |
+| Product photos (camera or file), on Checkout and in the product list | Done |
 | Purchases and suppliers | Done |
 | Stock counts, low-stock alerts | Planned |
 | Expenses | Done |
@@ -250,6 +251,20 @@ Turkish, کاشێر in Kurdish, نقطة البيع in Arabic). In the code and 
 - **Invoices**: any sale prints as an A4 invoice from Sales (shop name and
   the receipt's top text, the customer's name, phone and address, an item
   table, totals with tax, payments, and the receipt's bottom text).
+- **Product photos**: one per product, added in the product editor by
+  taking one with the camera or choosing a file (for a new product, it is
+  stored right after the first save). The browser makes it square (the
+  middle of the picture, 480 px) and small (WebP, else JPEG; at most
+  400 KB, usually 30–60 KB), and the server stores it only if its first
+  bytes are really a WebP, JPEG or PNG. Photos live in the shop's database
+  (`product_images`, apart from `products` so lists stay light);
+  `products.image_version` is when it last changed (0 = none) and is part
+  of its address (`/api/products/<id>/image?v=<version>`), so it can be
+  cached for a year and a new photo is never shown stale. They show on
+  Checkout tiles (tiles only get a picture area once the shop has any
+  photo), in the product list and the editor, and the service worker keeps
+  every photo it has shown for offline use. Photos are not in the JSON
+  backup.
 - **Stock** is a list of movements (`stock_moves`: opening, count, adjust,
   sale, void, and later purchase and return); the level is their sum.
   Products can be set not to count stock (services). The product editor
