@@ -15,12 +15,16 @@ import { UserMenu } from "./user-menu";
 
 // The frame around every signed-in screen.
 // - Tablets and computers: a sidebar on the start side (left, or right in
-//   Kurdish and Arabic) with the shop's logo and every section.
+//   Kurdish and Arabic) with the shop's logo and the sections, Settings
+//   pinned at its foot; the bell and the account menu sit in the top bar at
+//   the end corner (top right, or top left in Kurdish and Arabic).
 // - Phones: a slim top bar, and a bottom bar with the main sections plus
 //   "More" for the rest.
 export function AppShell({ viewer, children }: { viewer: Viewer; children: React.ReactNode }) {
   const { t } = useI18n();
   const items = navItems(viewer.sections, t);
+  const settings = items.find((i) => i.section === "settings");
+  const sideItems = items.filter((i) => i !== settings);
 
   return (
     <div className="flex min-h-dvh">
@@ -31,16 +35,17 @@ export function AppShell({ viewer, children }: { viewer: Viewer; children: React
         {t.nav.skipToContent}
       </a>
       <aside className="no-print sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-e border-sidebar-border bg-sidebar md:flex lg:w-64">
-        <ShopMark className="px-4 py-4" />
+        <ShopMark className="h-14 shrink-0 border-b border-sidebar-border px-4" compact />
         <nav aria-label={t.nav.main} className="flex-1 space-y-0.5 overflow-y-auto px-3 py-2">
-          {items.map((item) => (
+          {sideItems.map((item) => (
             <SideLink key={item.section} {...item} />
           ))}
         </nav>
-        <div className="flex items-center gap-1 border-t border-sidebar-border px-3 py-3">
-          <UserMenu viewer={viewer} className="min-w-0 flex-1" />
-          <UpdatesBell />
-        </div>
+        {settings && (
+          <div className="border-t border-sidebar-border px-3 py-3">
+            <SideLink {...settings} />
+          </div>
+        )}
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -50,9 +55,11 @@ export function AppShell({ viewer, children }: { viewer: Viewer; children: React
           <UpdatesBell />
           <UserMenu viewer={viewer} compact />
         </header>
-        <div className="no-print hidden h-12 items-center justify-end gap-3 px-6 md:flex">
+        <header className="no-print sticky top-0 z-30 hidden h-14 items-center justify-end gap-2 border-b border-border bg-background/90 px-6 backdrop-blur md:flex">
           <OutboxStatus />
-        </div>
+          <UpdatesBell />
+          <UserMenu viewer={viewer} compact showName />
+        </header>
         <main id="content" className="flex-1 pb-24 md:pb-10">
           {children}
         </main>

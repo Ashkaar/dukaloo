@@ -119,6 +119,10 @@ Set these in the Vercel project (Production). Never commit them.
   for two hours ("Lock owner screens" closes them again).
 - **Cookies** are httpOnly, signed with the shop's own key and scoped to the
   shop's path, so one device can be signed in to two shops.
+- **Layout.** Tablets and computers: a sidebar on the start side with the
+  sections and Settings at its foot, and a top bar with the bell and the
+  account menu in the end corner (top right, or top left in Kurdish and
+  Arabic). Phones: the same two at the top end, and a bottom bar.
 - **What's new** (the bell) only lists changes made after the shop's
   `created_at`, so a new shop starts with an empty list.
 
