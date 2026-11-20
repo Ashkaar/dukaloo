@@ -1,5 +1,6 @@
 "use client";
 
+import { ProductPhoto } from "./product-photo";
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { PackageIcon, PlusIcon, SearchIcon, TagsIcon } from "lucide-react";
 import Link from "next/link";
@@ -97,11 +98,14 @@ export function ProductList({ categories: initialCategories, first }: { categori
       col.accessor("name", {
         header: t.products.colName,
         cell: ({ row }) => (
-          <div className="min-w-0">
-            <p className="truncate font-semibold">{row.original.name}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {[row.original.brand, row.original.variantCount > 1 ? t.products.variants(row.original.variantCount) : ""].filter(Boolean).join(" · ") || " "}
-            </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <ProductPhoto productId={row.original.id} version={row.original.imageVersion} className="size-10 rounded-lg" iconClassName="size-4" />
+            <div className="min-w-0">
+              <p className="truncate font-semibold">{row.original.name}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {[row.original.brand, row.original.variantCount > 1 ? t.products.variants(row.original.variantCount) : ""].filter(Boolean).join(" · ") || " "}
+              </p>
+            </div>
           </div>
         ),
       }),
@@ -258,6 +262,7 @@ export function ProductList({ categories: initialCategories, first }: { categori
           <Card className="divide-y divide-border md:hidden">
             {items.map((p) => (
               <Link key={p.id} href={shop.href(`/dashboard/products/${p.id}`)} className="flex items-center gap-3 px-4 py-3 active:bg-highlight">
+                <ProductPhoto productId={p.id} version={p.imageVersion} className="size-11 rounded-lg" iconClassName="size-4" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{p.name}</p>
                   <p className="truncate text-xs text-muted-foreground">

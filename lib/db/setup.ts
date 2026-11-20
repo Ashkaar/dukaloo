@@ -68,6 +68,14 @@ export const SCHEMA: string[] = [
     updated_at INTEGER NOT NULL
   )`,
   "CREATE INDEX IF NOT EXISTS products_category ON products (category_id)",
+  // A product's photo (a small square image, resized in the browser), kept
+  // apart from the products table so listing products stays light.
+  `CREATE TABLE IF NOT EXISTS product_images (
+    product_id INTEGER PRIMARY KEY,
+    mime TEXT NOT NULL,
+    data BLOB NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`,
   "CREATE INDEX IF NOT EXISTS products_name ON products (name COLLATE NOCASE)",
   `CREATE TABLE IF NOT EXISTS product_variants (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -286,6 +294,9 @@ export const ADDED_COLUMNS: [string, string, string][] = [
   ["sales", "customer_name", "TEXT NOT NULL DEFAULT ''"],
   // Made on the till while offline and sent later.
   ["sales", "offline", "INTEGER NOT NULL DEFAULT 0"],
+  // When the product's photo last changed (ms); 0 = no photo. Part of the
+  // photo's address, so a new photo is never served from an old cache.
+  ["products", "image_version", "INTEGER NOT NULL DEFAULT 0"],
 ];
 
 async function addMissingColumns(client: Client): Promise<void> {

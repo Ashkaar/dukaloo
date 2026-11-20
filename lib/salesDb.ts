@@ -31,6 +31,7 @@ export async function tillItems(): Promise<TillItem[]> {
       sku: productVariants.sku,
       priceCents: productVariants.priceCents,
       trackStock: products.trackStock,
+      imageVersion: products.imageVersion,
     })
     .from(productVariants)
     .innerJoin(products, eq(products.id, productVariants.productId))
@@ -50,6 +51,7 @@ export async function tillItems(): Promise<TillItem[]> {
     priceCents: r.priceCents,
     trackStock: r.trackStock === 1,
     stockMilli: levels.get(r.variantId) ?? 0,
+    imageVersion: r.imageVersion,
   }));
 }
 

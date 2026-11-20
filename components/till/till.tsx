@@ -22,6 +22,7 @@ import { Label } from "../ui/label";
 import { Sheet, SheetContent, SheetTitle } from "../ui/sheet";
 import { useScanner } from "../use-scanner";
 import { CameraScannerButton } from "../camera-scanner";
+import { ProductPhoto } from "../products/product-photo";
 import { CustomerPicker, type PickedCustomer } from "./customer-picker";
 import { PayDialog, type NewSaleBody } from "./pay-dialog";
 import { ReceiptDialog } from "./receipt-dialog";
@@ -147,6 +148,8 @@ export function Till({
   useScanner((code) => {
     if (!addByCode(code)) toast.error(t.till.notFound(code));
   }, !paying && !done && editing === null && !discounting && !picking);
+
+  const anyPhoto = useMemo(() => items.some((i) => i.imageVersion > 0), [items]);
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -403,8 +406,10 @@ export function Till({
                     key={i.variantId}
                     type="button"
                     onClick={() => add(i)}
-                    className="flex min-h-24 cursor-pointer flex-col justify-between gap-2 rounded-xl border border-border bg-card p-3 text-start shadow-xs transition-colors hover:border-primary/50 active:bg-primary-soft"
+                    className="flex min-h-24 cursor-pointer flex-col justify-between gap-2 overflow-hidden rounded-xl border border-border bg-card p-3 text-start shadow-xs transition-colors hover:border-primary/50 active:bg-primary-soft"
                   >
+                    {/* Only shops that add photos get the taller tiles. */}
+                    {anyPhoto && <ProductPhoto productId={i.productId} version={i.imageVersion} className="-mx-3 -mt-3 aspect-[4/3] w-[calc(100%+1.5rem)] max-w-none border-b border-border" iconClassName="size-7" />}
                     <span className="min-w-0">
                       <span className="line-clamp-2 text-sm font-semibold leading-snug">{i.name}</span>
                       {i.variantLabel && <span className="block truncate text-xs text-muted-foreground">{i.variantLabel}</span>}

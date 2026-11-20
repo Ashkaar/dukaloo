@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { blob, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 // Each shop's own database, as Drizzle sees it (for typed queries).
 //
@@ -95,9 +95,18 @@ export const products = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
     // Added later (ADDED_COLUMNS).
     trackStock: integer("track_stock").notNull().default(1),
+    imageVersion: integer("image_version").notNull().default(0),
   },
   (t) => [index("products_category").on(t.categoryId), index("products_name").on(sql`${t.name} COLLATE NOCASE`)],
 );
+
+// A product's photo (see lib/db/setup.ts).
+export const productImages = sqliteTable("product_images", {
+  productId: integer("product_id").primaryKey(),
+  mime: text("mime").notNull(),
+  data: blob("data", { mode: "buffer" }).notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
 
 export const productVariants = sqliteTable(
   "product_variants",

@@ -69,6 +69,8 @@ export interface Product {
   active: boolean;
   // Count stock for this product (off for services and things not counted).
   trackStock: boolean;
+  // When its photo last changed; 0 = no photo (see productImagePath).
+  imageVersion: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -86,8 +88,17 @@ export interface ProductSummary {
   maxPriceCents: number;
   // The barcode or SKU of a single-variant product, else "".
   code: string;
+  imageVersion: number;
   updatedAt: number;
 }
+
+// Where a product's photo is served (add the shop's address with href()).
+// The version makes each new photo a new address, so caches never go stale.
+export const productImagePath = (productId: number, version: number) => `/api/products/${productId}/image?v=${version}`;
+// Photos are made square in the browser at this size, then stored.
+export const PRODUCT_IMAGE_PX = 480;
+export const PRODUCT_IMAGE_MAX_BYTES = 400_000;
+export const PRODUCT_IMAGE_TYPES = ["image/webp", "image/jpeg", "image/png"] as const;
 
 export const variantLabel = (v: Pick<Variant, "options">) => v.options.join(" / ");
 

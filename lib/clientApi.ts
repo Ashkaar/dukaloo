@@ -37,6 +37,11 @@ export async function sendJson<T>(url: string, method: "POST" | "PUT" | "PATCH" 
   );
 }
 
+// Sends a file (e.g. a photo) as the request body.
+export async function sendFile<T>(url: string, file: Blob): Promise<T> {
+  return handle<T>(await fetch(withBase(url), { method: "PUT", credentials: "same-origin", headers: { "Content-Type": file.type }, body: file }));
+}
+
 // The message to show for a failed request: the server's, or a fallback.
 export function errorMessage(error: unknown, fallback: string): string {
   return error instanceof ApiError && error.message ? error.message : fallback;

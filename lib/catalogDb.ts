@@ -12,7 +12,7 @@ import {
   type Variant,
 } from "./catalog";
 import { getDb, getShopDb } from "./db";
-import { categories, products, productVariants, shopSettings } from "./db/schema";
+import { categories, productImages, products, productVariants, shopSettings } from "./db/schema";
 
 const now = () => Date.now();
 
@@ -109,7 +109,7 @@ export async function listProducts(query: ProductQuery): Promise<{ items: Produc
   const whereSql = where.join(" AND ");
   const [{ rows }, count] = await Promise.all([
     client.execute({
-      sql: `SELECT p.id, p.name, p.category_id, p.brand, p.unit, p.active, p.updated_at,
+      sql: `SELECT p.id, p.name, p.category_id, p.brand, p.unit, p.active, p.updated_at, p.image_version,
               COUNT(v.id) AS variant_count, MIN(v.price_cents) AS min_price, MAX(v.price_cents) AS max_price,
               CASE WHEN COUNT(v.id) = 1 THEN COALESCE(NULLIF(MAX(v.barcode), ''), MAX(v.sku)) ELSE '' END AS code
             FROM products p
@@ -135,6 +135,7 @@ export async function listProducts(query: ProductQuery): Promise<{ items: Produc
       minPriceCents: Number(r.min_price ?? 0),
       maxPriceCents: Number(r.max_price ?? 0),
       code: String(r.code ?? ""),
+      imageVersion: Number(r.image_version ?? 0),
       updatedAt: Number(r.updated_at),
     })),
   };
@@ -176,6 +177,7 @@ export async function getProduct(id: number): Promise<Product | null> {
     variants: variants.map(toVariant),
     active: row.active === 1,
     trackStock: row.trackStock === 1,
+    imageVersion: row.imageVersion,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -352,4 +354,36 @@ export async function newInternalBarcode(): Promise<string> {
     if (!(await findByCode(code))) return code;
   }
   throw new Error("Couldn't find a free barcode");
+}
+
+// ---- Photos -------------------------------------------------------------
+
+// Stores a product's photo; returns its new version, or null if there is no
+// such live product.
+export async function setProductImage(productId: number, mime: string, data: Buffer): Promise<number | null> {
+  const db = await getDb();
+  const [row] = await db.select({ id: products.id }).from(products).where(and(eq(products.id, productId), isNull(products.archivedAt)));
+  if (!row) return null;
+  const now = Date.now();
+  await db
+    .insert(productImages)
+    .values({ productId, mime, data, updatedAt: now })
+    .onConflictDoUpdate({ target: productImages.productId, set: { mime, data, updatedAt: now } });
+  await db.update(products).set({ imageVersion: now }).where(eq(products.id, productId));
+  return now;
+}
+
+export async function getProductImage(productId: number): Promise<{ mime: string; data: Buffer } | null> {
+  const db = await getDb();
+  const [row] = await db.select({ mime: productImages.mime, data: productImages.data }).from(productImages).where(eq(productImages.productId, productId));
+  return row ? { mime: row.mime, data: Buffer.from(row.data) } : null;
+}
+
+export async function deleteProductImage(productId: number): Promise<boolean> {
+  const db = await getDb();
+  const [row] = await db.select({ id: products.id }).from(products).where(eq(products.id, productId));
+  if (!row) return false;
+  await db.delete(productImages).where(eq(productImages.productId, productId));
+  await db.update(products).set({ imageVersion: 0 }).where(eq(products.id, productId));
+  return true;
 }

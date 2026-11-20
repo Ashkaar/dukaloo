@@ -70,6 +70,10 @@ const tr: Messages = {
     markRead: "Tümünü okundu say",
     // One entry per update in lib/updates.ts: { title, text }.
     items: {
+      photos: {
+        title: "Ürün fotoğrafları",
+        text: "Her ürüne telefon kamerasıyla veya bir dosyadan fotoğraf ekleyin. Kasa kutucuklarında ve ürün listesinde görünür, bir kez görüldükten sonra çevrimdışı da çalışır.",
+      },
       scale: {
         title: "Tartılı satış",
         text: "Ayarlar’dan açın: mağaza terazinizin bastığı etiketleri (ağırlık veya fiyat) okutun ya da kasaya bağlı teraziyi okuyun.",
@@ -728,6 +732,19 @@ const tr: Messages = {
     reading: "Okunuyor…",
     noPort: "Terazi seçilmedi. Bağlayıp tekrar deneyin (bilgisayarda Chrome veya Edge).",
     noReading: "Teraziden ağırlık gelmedi. Açık, sabit ve Ayarlar’daki hızda olduğundan emin olun.",
+  },
+
+  photos: {
+    title: "Fotoğraf",
+    take: "Fotoğraf çek",
+    choose: "Fotoğraf seç",
+    change: "Değiştir",
+    remove: "Kaldır",
+    note: "Kasada ve ürün listesinde görünür. Resmin ortası kare olarak kullanılır.",
+    working: "Fotoğraf hazırlanıyor…",
+    saved: "Fotoğraf kaydedildi.",
+    unreadable: "Bu resim kullanılamadı. Başka bir tane deneyin (JPEG, PNG veya WebP).",
+    notSaved: "Ürün kaydedildi ama fotoğrafı kaydedilmedi. Tekrar ekleyin.",
   },
 
   errors: {
